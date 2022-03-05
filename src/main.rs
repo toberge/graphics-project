@@ -1,5 +1,6 @@
 extern crate sdl2;
 mod scene;
+mod shader;
 use glow::*;
 use scene::vao::VAO;
 
@@ -7,9 +8,10 @@ fn main() {
     // Create a context from a sdl2 window
     let (gl, window, mut events_loop, _context) = unsafe { create_sdl2_context() };
     // Create a shader program from source
-    let program = unsafe { create_program(&gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE) };
-    // Create a vertex buffer and vertex array object
+    let shader =
+        unsafe { shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag") };
 
+    // Create a vertex buffer and vertex array object
     let test = unsafe {
         VAO::new(
             &gl,
@@ -21,10 +23,10 @@ fn main() {
     };
 
     unsafe {
-        gl.use_program(Some(program));
+        shader.activate(&gl);
 
         // Upload some uniforms
-        set_uniform(&gl, program, "blue", 0.8);
+        gl.uniform_1_f32(shader.get_uniform_location(&gl, "blue").as_ref(), 0.8);
 
         gl.clear_color(0.1, 0.2, 0.3, 1.0);
     }
@@ -61,11 +63,12 @@ fn main() {
 
     unsafe {
         // Clean up
-        gl.delete_program(program);
+        shader.destroy(&gl);
         test.destroy(&gl);
     }
 }
 
+/// From glow tutorial
 unsafe fn create_sdl2_context() -> (
     glow::Context,
     sdl2::video::Window,
@@ -89,65 +92,3 @@ unsafe fn create_sdl2_context() -> (
 
     (gl, window, event_loop, gl_context)
 }
-
-unsafe fn create_program(
-    gl: &glow::Context,
-    vertex_shader_source: &str,
-    fragment_shader_source: &str,
-) -> NativeProgram {
-    let program = gl.create_program().expect("Cannot create program");
-
-    let shader_sources = [
-        (glow::VERTEX_SHADER, vertex_shader_source),
-        (glow::FRAGMENT_SHADER, fragment_shader_source),
-    ];
-
-    let mut shaders = Vec::with_capacity(shader_sources.len());
-
-    for (shader_type, shader_source) in shader_sources.iter() {
-        let shader = gl
-            .create_shader(*shader_type)
-            .expect("Cannot create shader");
-        gl.shader_source(shader, shader_source);
-        gl.compile_shader(shader);
-        if !gl.get_shader_compile_status(shader) {
-            panic!("{}", gl.get_shader_info_log(shader));
-        }
-        gl.attach_shader(program, shader);
-        shaders.push(shader);
-    }
-
-    gl.link_program(program);
-    if !gl.get_program_link_status(program) {
-        panic!("{}", gl.get_program_info_log(program));
-    }
-
-    for shader in shaders {
-        gl.detach_shader(program, shader);
-        gl.delete_shader(shader);
-    }
-
-    program
-}
-
-unsafe fn set_uniform(gl: &glow::Context, program: NativeProgram, name: &str, value: f32) {
-    let uniform_location = gl.get_uniform_location(program, name);
-    // See also `uniform_n_i32`, `uniform_n_u32`, `uniform_matrix_4_f32_slice` etc.
-    gl.uniform_1_f32(uniform_location.as_ref(), value)
-}
-
-const VERTEX_SHADER_SOURCE: &str = r#"#version 130
-  in vec3 in_position;
-  out vec3 position;
-  void main() {
-    position = in_position;
-    gl_Position = vec4(in_position.xy - 0.5, 0.0, 1.0);
-  }"#;
-const FRAGMENT_SHADER_SOURCE: &str = r#"#version 130
-  precision mediump float;
-  in vec3 position;
-  out vec4 color;
-  uniform float blue;
-  void main() {
-    color = vec4(position.xy, blue, 1.0);
-  }"#;
