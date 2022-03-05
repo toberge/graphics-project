@@ -1,41 +1,68 @@
 extern crate sdl2;
+mod scene;
 use glow::*;
+use scene::vao::VAO;
 
 fn main() {
+    // Create a context from a sdl2 window
+    let (gl, window, mut events_loop, _context) = unsafe { create_sdl2_context() };
+    // Create a shader program from source
+    let program = unsafe { create_program(&gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE) };
+    // Create a vertex buffer and vertex array object
+
+    let test = unsafe {
+        VAO::new(
+            &gl,
+            &vec![0.7, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            &vec![0.0, 0.0, 1.0, 0.0].repeat(3),
+            &vec![0.0, 1.0, 0.0, 1.0].repeat(3),
+            &vec![0, 1, 2],
+        )
+    };
+
     unsafe {
-        // Create a context from a sdl2 window
-        let (gl, window, mut events_loop, _context) = create_sdl2_context();
-
-        // Create a shader program from source
-        let program = create_program(&gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
         gl.use_program(Some(program));
-
-        // Create a vertex buffer and vertex array object
-        let (vbo, vao) = create_vertex_buffer(&gl);
 
         // Upload some uniforms
         set_uniform(&gl, program, "blue", 0.8);
 
         gl.clear_color(0.1, 0.2, 0.3, 1.0);
+    }
 
-        'render: loop {
-            {
-                for event in events_loop.poll_iter() {
-                    if let sdl2::event::Event::Quit { .. } = event {
-                        break 'render;
-                    }
+    let first_frame_time = std::time::Instant::now();
+    let mut last_frame_time = first_frame_time;
+
+    'render: loop {
+        // Time delta code from gloom-rs
+        let now = std::time::Instant::now();
+        let time = now.duration_since(first_frame_time).as_secs_f32();
+        let delta_time = now.duration_since(last_frame_time).as_secs_f32();
+        last_frame_time = now;
+
+        for event in events_loop.poll_iter() {
+            match event {
+                sdl2::event::Event::KeyDown { keycode, .. } => {
+                    println!("{}", keycode.expect("Could not get keycode :("))
                 }
+                sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
+                    println!("{}, {}", xrel as f32 * delta_time, yrel as f32 * delta_time)
+                }
+                sdl2::event::Event::Quit { .. } => break 'render,
+                _ => {}
             }
-
-            gl.clear(glow::COLOR_BUFFER_BIT);
-            gl.draw_arrays(glow::TRIANGLES, 0, 3);
-            window.gl_swap_window();
         }
 
+        unsafe {
+            gl.clear(glow::COLOR_BUFFER_BIT);
+            test.draw(&gl);
+            window.gl_swap_window();
+        }
+    }
+
+    unsafe {
         // Clean up
         gl.delete_program(program);
-        gl.delete_vertex_array(vao);
-        gl.delete_buffer(vbo)
+        test.destroy(&gl);
     }
 }
 
@@ -103,28 +130,6 @@ unsafe fn create_program(
     program
 }
 
-unsafe fn create_vertex_buffer(gl: &glow::Context) -> (NativeBuffer, NativeVertexArray) {
-    // This is a flat array of f32s that are to be interpreted as vec2s.
-    let triangle_vertices = [0.5f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32];
-    let triangle_vertices_u8: &[u8] = core::slice::from_raw_parts(
-        triangle_vertices.as_ptr() as *const u8,
-        triangle_vertices.len() * core::mem::size_of::<f32>(),
-    );
-
-    // We construct a buffer and upload the data
-    let vbo = gl.create_buffer().unwrap();
-    gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
-    gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, triangle_vertices_u8, glow::STATIC_DRAW);
-
-    // We now construct a vertex array to describe the format of the input buffer
-    let vao = gl.create_vertex_array().unwrap();
-    gl.bind_vertex_array(Some(vao));
-    gl.enable_vertex_attrib_array(0);
-    gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 8, 0);
-
-    (vbo, vao)
-}
-
 unsafe fn set_uniform(gl: &glow::Context, program: NativeProgram, name: &str, value: f32) {
     let uniform_location = gl.get_uniform_location(program, name);
     // See also `uniform_n_i32`, `uniform_n_u32`, `uniform_matrix_4_f32_slice` etc.
@@ -132,17 +137,17 @@ unsafe fn set_uniform(gl: &glow::Context, program: NativeProgram, name: &str, va
 }
 
 const VERTEX_SHADER_SOURCE: &str = r#"#version 130
-  in vec2 in_position;
-  out vec2 position;
+  in vec3 in_position;
+  out vec3 position;
   void main() {
     position = in_position;
-    gl_Position = vec4(in_position - 0.5, 0.0, 1.0);
+    gl_Position = vec4(in_position.xy - 0.5, 0.0, 1.0);
   }"#;
 const FRAGMENT_SHADER_SOURCE: &str = r#"#version 130
   precision mediump float;
-  in vec2 position;
+  in vec3 position;
   out vec4 color;
   uniform float blue;
   void main() {
-    color = vec4(position, blue, 1.0);
+    color = vec4(position.xy, blue, 1.0);
   }"#;
