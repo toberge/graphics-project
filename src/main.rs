@@ -2,6 +2,7 @@ extern crate sdl2;
 mod scene;
 mod shader;
 use glow::*;
+use scene::graph::*;
 use scene::vao::VAO;
 
 fn main() {
@@ -11,7 +12,7 @@ fn main() {
     let shader =
         unsafe { shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag") };
 
-    // Create a vertex buffer and vertex array object
+    // Create VAOs
     let test = unsafe {
         VAO::new(
             &gl,
@@ -21,6 +22,12 @@ fn main() {
             &vec![0, 1, 2],
         )
     };
+
+    // Create scene graph
+    let mut scene_graph = SceneGraph::new();
+    let mut test_node = Node::new(NodeType::Geometry);
+    test_node.vao = Some(test);
+    scene_graph.add_child(0, test_node);
 
     unsafe {
         shader.activate(&gl);
@@ -56,7 +63,7 @@ fn main() {
 
         unsafe {
             gl.clear(glow::COLOR_BUFFER_BIT);
-            test.draw(&gl);
+            scene_graph.draw(&gl, 0);
             window.gl_swap_window();
         }
     }
@@ -64,7 +71,9 @@ fn main() {
     unsafe {
         // Clean up
         shader.destroy(&gl);
-        test.destroy(&gl);
+        // TODO rework how VAO is done, just store VAOs separately and have NativeVertexArray
+        // inside node?
+        scene_graph.nodes[1].vao.as_ref().unwrap().destroy(&gl);
     }
 }
 
@@ -81,7 +90,7 @@ unsafe fn create_sdl2_context() -> (
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(3, 0);
     let window = video
-        .window("Hello triangle!", 1024, 769)
+        .window("Secret CRT stash", 1024, 769)
         .opengl()
         .resizable()
         .build()
