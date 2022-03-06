@@ -1,4 +1,5 @@
 use glow::*;
+use tobj;
 
 /// Holds all information necessary to draw an initialized VAO.
 pub struct VAO {
