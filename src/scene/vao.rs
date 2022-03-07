@@ -7,6 +7,7 @@ pub struct VAO {
     pub vao: NativeVertexArray,
     vertex_buffer: NativeBuffer,
     normal_buffer: NativeBuffer,
+    uv_buffer: NativeBuffer,
     color_buffer: NativeBuffer,
     pub size: i32,
 }
@@ -87,6 +88,7 @@ impl VAO {
         gl: &glow::Context,
         vertices: &Vec<f32>,
         normals: &Vec<f32>,
+        uvs: &Vec<f32>,
         color: &Vec<f32>,
         indices: &Vec<u32>,
     ) -> VAO {
@@ -98,7 +100,9 @@ impl VAO {
         // Generate and bind vertices and normals
         let vertex_buffer = create_buffer(&gl, 0, 3, vertices);
         let normal_buffer = create_buffer(&gl, 1, 3, normals);
-        let color_buffer = create_buffer(&gl, 2, 4, color);
+        let uv_buffer = create_buffer(&gl, 2, 2, uvs);
+
+        let color_buffer = create_buffer(&gl, 3, 4, color);
 
         let index_buffer = gl.create_buffer().expect("Unable to create index buffer");
         gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(index_buffer));
@@ -112,6 +116,7 @@ impl VAO {
             vao,
             vertex_buffer,
             normal_buffer,
+            uv_buffer,
             color_buffer,
             size: indices.len() as i32,
         }
@@ -134,17 +139,20 @@ impl VAO {
             gl,
             &model.mesh.positions,
             &model.mesh.normals,
+            &model.mesh.texcoords,
             &colors,
             &model.mesh.indices,
         )
     }
 
+    /// Creates a square to render arbitrary shaders on
     pub unsafe fn square(gl: &glow::Context) -> VAO {
         VAO::new(
             gl,
             &vec![-1., -1., 0., 1., -1., 0., 1., 1., 0., -1., 1., 0.],
             &vec![0., 0., -1.].repeat(4),
-            &vec![1., 1., 1., 1.].repeat(4),
+            &vec![0., 0.].repeat(4),         // UV is irrelevant here
+            &vec![1., 1., 1., 1.].repeat(4), // Same goes for color
             &vec![0, 1, 2, 0, 2, 3],
         )
     }

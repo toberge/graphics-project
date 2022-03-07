@@ -8,6 +8,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
             &gl,
             &vec![0.7, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
             &vec![0.0, 0.0, 1.0, 0.0].repeat(3),
+            &vec![0., 1., 0., 0., 1., 0.],
             &vec![0.0, 1.0, 0.0, 1.0].repeat(3),
             &vec![0, 1, 2],
         )
