@@ -33,6 +33,16 @@ pub struct Node {
 pub struct SceneGraph {
     pub nodes: Vec<Node>,
     pub root: usize,
+    // Nodes to be treated as cameras during reflection rendering
+    pub cameras: Vec<usize>,
+
+    // Remember
+    pub vaos: Vec<VAO>,
+
+    // Scene graph needs access to shaders during rendering
+    pub final_shader: Option<NativeProgram>,
+    pub reflection_shader: Option<NativeProgram>,
+    pub screen_shaders: Vec<NativeProgram>,
 }
 
 impl Node {
@@ -63,6 +73,11 @@ impl SceneGraph {
         SceneGraph {
             nodes: vec![Node::new(NodeType::Root)],
             root: 0,
+            cameras: vec![],
+            vaos: vec![],
+            final_shader: None,
+            reflection_shader: None,
+            screen_shaders: vec![],
         }
     }
 
@@ -97,7 +112,9 @@ impl SceneGraph {
         }
     }
 
-    pub unsafe fn draw(&self, gl: &glow::Context, node_index: usize) {
+    // TODO render_reflections and render_textures?
+
+    pub unsafe fn render(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
         if let Some(vao) = &node.vao {
             // TODO uniforms
@@ -107,7 +124,20 @@ impl SceneGraph {
 
         // Recurse
         for child in node.children.to_vec() {
-            self.draw(gl, child);
+            self.render(gl, child);
         }
+    }
+
+    pub unsafe fn teardown(&mut self, gl: &glow::Context) {
+        // Clean up VAOs
+        self.vaos.iter().for_each(|vao| vao.destroy(gl));
+        // Clean up shaders
+        self.final_shader
+            .map_or_else(|| return, |shader| gl.delete_program(shader));
+        self.reflection_shader
+            .map_or_else(|| return, |shader| gl.delete_program(shader));
+        self.screen_shaders
+            .iter()
+            .for_each(|&shader| gl.delete_program(shader));
     }
 }

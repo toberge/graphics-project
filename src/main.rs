@@ -2,8 +2,7 @@ extern crate sdl2;
 mod scene;
 mod shader;
 use glow::*;
-use scene::graph::*;
-use scene::vao::VAO;
+use scene::setup::create_scene;
 
 fn main() {
     // Create a context from a sdl2 window
@@ -12,22 +11,8 @@ fn main() {
     let shader =
         unsafe { shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag") };
 
-    // Create VAOs
-    let test = unsafe {
-        VAO::new(
-            &gl,
-            &vec![0.7, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &vec![0.0, 0.0, 1.0, 0.0].repeat(3),
-            &vec![0.0, 1.0, 0.0, 1.0].repeat(3),
-            &vec![0, 1, 2],
-        )
-    };
-
-    // Create scene graph
-    let mut scene_graph = SceneGraph::new();
-    let mut test_node = Node::new(NodeType::Geometry);
-    test_node.vao = Some(test);
-    scene_graph.add_child(0, test_node);
+    let mut scene_graph = create_scene(&gl);
+    scene_graph.final_shader = Some(shader.program);
 
     unsafe {
         shader.activate(&gl);
@@ -63,17 +48,14 @@ fn main() {
 
         unsafe {
             gl.clear(glow::COLOR_BUFFER_BIT);
-            scene_graph.draw(&gl, 0);
+            scene_graph.render(&gl, 0);
             window.gl_swap_window();
         }
     }
 
     unsafe {
         // Clean up
-        shader.destroy(&gl);
-        // TODO rework how VAO is done, just store VAOs separately and have NativeVertexArray
-        // inside node?
-        scene_graph.nodes[1].vao.as_ref().unwrap().destroy(&gl);
+        scene_graph.teardown(&gl);
     }
 }
 

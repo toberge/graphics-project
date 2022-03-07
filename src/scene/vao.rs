@@ -1,6 +1,7 @@
 use glow::*;
 use tobj;
 
+#[derive(Clone, Copy)]
 /// Holds all information necessary to draw an initialized VAO.
 pub struct VAO {
     pub vao: NativeVertexArray,
@@ -8,6 +9,25 @@ pub struct VAO {
     normal_buffer: NativeBuffer,
     color_buffer: NativeBuffer,
     pub size: i32,
+}
+
+pub fn load_obj(file: &str) -> (Vec<tobj::Model>, Vec<tobj::Material>) {
+    // From tobj example + earlier assignment
+    let obj = tobj::load_obj(
+        file,
+        &tobj::LoadOptions {
+            triangulate: true,
+            single_index: true,
+            ..Default::default()
+        },
+    );
+    assert!(obj.is_ok());
+
+    let (models, materials) = obj.expect("Failed to load OBJ file");
+
+    let materials = materials.expect("Failed to load material");
+
+    return (models, materials);
 }
 
 /// From the glow example
@@ -95,6 +115,28 @@ impl VAO {
             color_buffer,
             size: indices.len() as i32,
         }
+    }
+
+    pub unsafe fn from_mesh(
+        gl: &glow::Context,
+        model: &tobj::Model,
+        materials: &Vec<tobj::Material>,
+    ) -> VAO {
+        let id = model
+            .mesh
+            .material_id
+            .expect("No material in texture; abort!");
+        // Repeat single-color material
+        let mut colors: Vec<f32> = materials[id].diffuse.to_vec();
+        colors.push(1.0);
+        colors = colors.repeat(model.mesh.indices.len());
+        VAO::new(
+            &gl,
+            &model.mesh.positions,
+            &model.mesh.normals,
+            &colors,
+            &model.mesh.indices,
+        )
     }
 
     pub unsafe fn destroy(&self, gl: &glow::Context) {
