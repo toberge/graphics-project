@@ -22,14 +22,13 @@ void main() {
         diffuse_reflection = texture(sampler, textureCoordinates).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
-        //diffuse_reflection = vec3(1., 1., 1.);
     }
 
     vec3 lighting = vec3(0);
 
     for (int i = 0; i < 1; i++) {
         //vec3 light = lightSource.position;
-        vec3 light = vec3(1., 2., 0.);
+        vec3 light = vec3(1., 4., 0.);
         float S = 1.;
 
         // Attenuation (reduces reach of lightsource)
@@ -38,12 +37,11 @@ void main() {
         float lc = 0.002;
         float d = length(light - position);
         float L = 1 / (la + d*lb + d*d*lc);
-        L *= 5;
-        L = 1; // TODO remove
 
         // Phong model
         // Parameters – note that specular reflection is independent of surface color!
         vec3 specular_reflection = vec3(1.0, 1.0, 1.0);
+        vec3 lightColor = vec3(0.1, 0.1, 0.1);
         // Vectors
         vec3 lightDir = normalize(light - position);
         vec3 camDir = normalize(camera_position - position);
@@ -53,7 +51,7 @@ void main() {
         float diffuse_factor = S * L * max(0, dot(lightDir, normal));
         float specular_factor = S * L * pow(max(0, dot(reflection, camDir)), shininess);
         //lighting += diffuse_factor * lightSource.color * diffuse_reflection + specular_factor * lightSource.color * specular_reflection;
-        lighting += diffuse_factor * diffuse_reflection + specular_factor * specular_reflection;
+        lighting += diffuse_factor * diffuse_reflection * lightColor + specular_factor * specular_reflection * lightColor;
 
     }
 

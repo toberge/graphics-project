@@ -167,6 +167,7 @@ impl VAO {
         gl.delete_vertex_array(self.vao);
         gl.delete_buffer(self.vertex_buffer);
         gl.delete_buffer(self.normal_buffer);
+        gl.delete_buffer(self.uv_buffer);
         gl.delete_buffer(self.color_buffer);
     }
 }

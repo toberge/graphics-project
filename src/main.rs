@@ -20,8 +20,8 @@ fn main() {
     // Set OpenGL options
     unsafe {
         // TODO :))))))
-        //gl.enable(glow::DEPTH_TEST);
-        //gl.depth_func(glow::LESS);
+        gl.enable(glow::DEPTH_TEST);
+        gl.depth_func(glow::LESS);
         gl.enable(glow::CULL_FACE);
         gl.disable(glow::MULTISAMPLE);
         gl.enable(glow::BLEND);
@@ -72,18 +72,16 @@ fn main() {
         let delta_time = now.duration_since(last_frame_time).as_secs_f32();
         last_frame_time = now;
         // Cap at 60 FPS in the worst way ever
-        unsafe { sdl2::sys::SDL_Delay((16.666 - delta_time * 1000.) as u32) }
+        //unsafe { sdl2::sys::SDL_Delay((16.666 - delta_time * 1000.) as u32) }
 
         for event in events_loop.poll_iter() {
             match event {
                 sdl2::event::Event::KeyDown { keycode, .. } => {
-                    println!("{}", keycode.expect("Could not get keycode :("));
                     if let Some(keycode_) = keycode {
                         cam.handle_keys(keycode_, delta_time * MOVE_SPEED);
                     }
                 }
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
-                    println!("{}, {}", xrel as f32 * delta_time, yrel as f32 * delta_time);
                     cam.yaw += xrel as f32 * LOOK_SPEED;
                     cam.pitch += yrel as f32 * LOOK_SPEED;
                 }
@@ -93,17 +91,18 @@ fn main() {
         }
 
         unsafe {
-            // Render texture
-            //gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
-            //gl.clear(glow::COLOR_BUFFER_BIT);
-            //single_color_shader.activate(&gl);
-            //square.draw(&gl);
-            // Reset framebuffer and render scene
-            //window.gl_swap_window();
-            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
-            gl.clear(glow::COLOR_BUFFER_BIT);
-            shader.activate(&gl);
+            // Update transformations
             scene_graph.update_transformations(0, &glm::identity());
+            // Render texture
+            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            //gl.clear(glow::COLOR_BUFFER_BIT);
+            single_color_shader.activate(&gl);
+            square.draw(&gl);
+            window.gl_swap_window();
+            // Reset framebuffer and render scene
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+            shader.activate(&gl);
             scene_graph.render(
                 &gl,
                 0,
@@ -141,7 +140,7 @@ unsafe fn create_sdl2_context() -> (
         .window("Secret CRT stash", WINDOW_HEIGHT, WINDOW_WIDTH)
         .opengl()
         .resizable()
-        .input_grabbed()
+        //.input_grabbed()
         .build()
         .unwrap();
     let gl_context = window.gl_create_context().unwrap();
