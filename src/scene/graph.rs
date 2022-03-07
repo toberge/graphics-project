@@ -18,7 +18,7 @@ pub struct Node {
 
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
-    texture: Option<NativeTexture>,
+    pub texture: Option<NativeTexture>,
 
     position: glm::Vec3,
     reference_point: glm::Vec3,
@@ -112,13 +112,17 @@ impl SceneGraph {
         }
     }
 
-    // TODO render_reflections and render_textures?
+    // TODO render_reflections and render_screens?
 
     pub unsafe fn render(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
         if let Some(vao) = &node.vao {
             // TODO uniforms
             // TODO texture :))))
+            if let Some(texture) = node.texture {
+                gl.bind_texture(glow::TEXTURE0, Some(texture));
+                gl.active_texture(glow::TEXTURE0);
+            }
             vao.draw(gl);
         }
 

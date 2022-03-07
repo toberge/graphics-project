@@ -131,11 +131,21 @@ impl VAO {
         colors.push(1.0);
         colors = colors.repeat(model.mesh.indices.len());
         VAO::new(
-            &gl,
+            gl,
             &model.mesh.positions,
             &model.mesh.normals,
             &colors,
             &model.mesh.indices,
+        )
+    }
+
+    pub unsafe fn square(gl: &glow::Context) -> VAO {
+        VAO::new(
+            gl,
+            &vec![-1., -1., 0., 1., -1., 0., 1., 1., 0., -1., 1., 0.],
+            &vec![0., 0., -1.].repeat(4),
+            &vec![1., 1., 1., 1.].repeat(4),
+            &vec![0, 1, 2, 0, 2, 3],
         )
     }
 

@@ -3,6 +3,8 @@ mod scene;
 mod shader;
 use glow::*;
 use scene::setup::create_scene;
+use scene::texture;
+use scene::vao::VAO;
 
 fn main() {
     // Create a context from a sdl2 window
@@ -11,8 +13,22 @@ fn main() {
     let shader =
         unsafe { shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag") };
 
+    let single_color_shader = unsafe {
+        shader::Shader::new(
+            &gl,
+            "res/shaders/single_color.vert",
+            "res/shaders/single_color.frag",
+        )
+    };
+
     let mut scene_graph = create_scene(&gl);
     scene_graph.final_shader = Some(shader.program);
+
+    // temp test of texture stuff
+    let square = unsafe { VAO::square(&gl) };
+    let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 100, 100) };
+    scene_graph.nodes[1].texture = Some(texture.texture);
+    scene_graph.nodes[2].texture = Some(texture.texture);
 
     unsafe {
         shader.activate(&gl);
@@ -47,8 +63,17 @@ fn main() {
         }
 
         unsafe {
+            // Render texture
+            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
             gl.clear(glow::COLOR_BUFFER_BIT);
+            single_color_shader.activate(&gl);
+            square.draw(&gl);
+            // Reset framebuffer and render scene
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            gl.clear(glow::COLOR_BUFFER_BIT);
+            shader.activate(&gl);
             scene_graph.render(&gl, 0);
+            // eh
             window.gl_swap_window();
         }
     }
@@ -56,6 +81,10 @@ fn main() {
     unsafe {
         // Clean up
         scene_graph.teardown(&gl);
+
+        // (extra stuff)
+        single_color_shader.destroy(&gl);
+        square.destroy(&gl);
     }
 }
 
