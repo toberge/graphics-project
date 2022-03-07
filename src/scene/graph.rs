@@ -20,10 +20,10 @@ pub struct Node {
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<NativeTexture>,
 
-    position: glm::Vec3,
-    reference_point: glm::Vec3,
-    rotation: glm::Vec3,
-    scale: glm::Vec3,
+    pub position: glm::Vec3,
+    pub reference_point: glm::Vec3,
+    pub rotation: glm::Vec3,
+    pub scale: glm::Vec3,
 
     model_matrix: glm::Mat4,
     view_matrix: glm::Mat4,
@@ -114,16 +114,22 @@ impl SceneGraph {
 
     // TODO render_reflections and render_screens?
 
-    pub unsafe fn render(&self, gl: &glow::Context, node_index: usize, view_transform: &glm::Mat4) {
+    pub unsafe fn render(
+        &self,
+        gl: &glow::Context,
+        node_index: usize,
+        view_transform: &glm::Mat4,
+        camera_position: &glm::Vec3,
+    ) {
         let node = &self.nodes[node_index];
         if let Some(vao) = &node.vao {
             // Test uniform loc:
-            // match gl.get_uniform_location(self.final_shader.unwrap(), "name") {
-            //     Some(_) => println!("yay"),
-            //     None => println!("nay"),
-            // }
+            //match gl.get_uniform_location(self.final_shader.unwrap(), "model_transform") {
+            //    Some(_) => println!("yay"),
+            //    None => println!("nay"),
+            //}
 
-            // Set uniforms
+            // Set uniforms (a lot of them)
             gl.uniform_matrix_4_f32_slice(
                 gl.get_uniform_location(self.final_shader.unwrap(), "model_transform")
                     .as_ref(),
@@ -136,11 +142,39 @@ impl SceneGraph {
                 false,
                 (view_transform * node.model_matrix).as_slice(),
             );
+            gl.uniform_matrix_3_f32_slice(
+                gl.get_uniform_location(self.final_shader.unwrap(), "normal_transform")
+                    .as_ref(),
+                false,
+                // Normal restoration matrix from earlier
+                &glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix))).as_slice(),
+            );
+            gl.uniform_3_f32_slice(
+                gl.get_uniform_location(self.final_shader.unwrap(), "camera_position")
+                    .as_ref(),
+                &camera_position.as_slice(),
+            );
+            gl.uniform_1_f32(
+                gl.get_uniform_location(self.final_shader.unwrap(), "shininess")
+                    .as_ref(),
+                vao.shininess,
+            );
 
-            // TODO texture uniform thing? :))))
+            // Bind texture if one exists, and indicate whether the model has a texture or not
             if let Some(texture) = node.texture {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        .as_ref(),
+                    1,
+                );
                 gl.bind_texture(glow::TEXTURE0, Some(texture));
                 gl.active_texture(glow::TEXTURE0);
+            } else {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        .as_ref(),
+                    0,
+                );
             }
 
             // Then draw the VAO
@@ -149,7 +183,7 @@ impl SceneGraph {
 
         // Recurse
         for child in node.children.to_vec() {
-            self.render(gl, child, view_transform);
+            self.render(gl, child, view_transform, camera_position);
         }
     }
 

@@ -1,5 +1,6 @@
 use super::graph::{Node, NodeType, SceneGraph};
 use super::vao::{load_obj, VAO};
+use glm;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create VAOs
@@ -11,6 +12,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
             &vec![0., 1., 0., 0., 1., 0.],
             &vec![0.0, 1.0, 0.0, 1.0].repeat(3),
             &vec![0, 1, 2],
+            32.,
         )
     };
     let (models, materials) = load_obj("res/models/crt.obj");
@@ -20,6 +22,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut scene_graph = SceneGraph::new();
     let mut test_node = Node::new(NodeType::Geometry);
     test_node.vao = Some(test_vao);
+    test_node.position = glm::vec3(0., 0., -3.);
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     scene_graph.add_child(0, test_node);

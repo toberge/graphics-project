@@ -10,6 +10,7 @@ pub struct VAO {
     uv_buffer: NativeBuffer,
     color_buffer: NativeBuffer,
     pub size: i32,
+    pub shininess: f32,
 }
 
 pub fn load_obj(file: &str) -> (Vec<tobj::Model>, Vec<tobj::Material>) {
@@ -91,6 +92,7 @@ impl VAO {
         uvs: &Vec<f32>,
         color: &Vec<f32>,
         indices: &Vec<u32>,
+        shininess: f32,
     ) -> VAO {
         // Create a VAO
         let vao = gl.create_vertex_array().expect("Unable to create VAO");
@@ -114,11 +116,12 @@ impl VAO {
 
         VAO {
             vao,
+            size: indices.len() as i32,
             vertex_buffer,
             normal_buffer,
             uv_buffer,
             color_buffer,
-            size: indices.len() as i32,
+            shininess,
         }
     }
 
@@ -133,6 +136,7 @@ impl VAO {
             .expect("No material in texture; abort!");
         // Repeat single-color material
         let mut colors: Vec<f32> = materials[id].diffuse.to_vec();
+        println!("{:?}", colors);
         colors.push(1.0);
         colors = colors.repeat(model.mesh.indices.len());
         VAO::new(
@@ -142,6 +146,7 @@ impl VAO {
             &model.mesh.texcoords,
             &colors,
             &model.mesh.indices,
+            materials[id].shininess,
         )
     }
 
@@ -154,6 +159,7 @@ impl VAO {
             &vec![0., 0.].repeat(4),         // UV is irrelevant here
             &vec![1., 1., 1., 1.].repeat(4), // Same goes for color
             &vec![0, 1, 2, 0, 2, 3],
+            32.,
         )
     }
 
