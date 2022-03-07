@@ -1,4 +1,4 @@
-extern crate nalgebra_glm as glm;
+use glm;
 use glow::*;
 
 use super::vao::VAO;
@@ -114,21 +114,42 @@ impl SceneGraph {
 
     // TODO render_reflections and render_screens?
 
-    pub unsafe fn render(&self, gl: &glow::Context, node_index: usize) {
+    pub unsafe fn render(&self, gl: &glow::Context, node_index: usize, view_transform: &glm::Mat4) {
         let node = &self.nodes[node_index];
         if let Some(vao) = &node.vao {
-            // TODO uniforms
-            // TODO texture :))))
+            // Test uniform loc:
+            // match gl.get_uniform_location(self.final_shader.unwrap(), "name") {
+            //     Some(_) => println!("yay"),
+            //     None => println!("nay"),
+            // }
+
+            // Set uniforms
+            gl.uniform_matrix_4_f32_slice(
+                gl.get_uniform_location(self.final_shader.unwrap(), "model_transform")
+                    .as_ref(),
+                false,
+                node.model_matrix.as_slice(),
+            );
+            gl.uniform_matrix_4_f32_slice(
+                gl.get_uniform_location(self.final_shader.unwrap(), "view_transform")
+                    .as_ref(),
+                false,
+                (view_transform * node.model_matrix).as_slice(),
+            );
+
+            // TODO texture uniform thing? :))))
             if let Some(texture) = node.texture {
                 gl.bind_texture(glow::TEXTURE0, Some(texture));
                 gl.active_texture(glow::TEXTURE0);
             }
+
+            // Then draw the VAO
             vao.draw(gl);
         }
 
         // Recurse
         for child in node.children.to_vec() {
-            self.render(gl, child);
+            self.render(gl, child, view_transform);
         }
     }
 

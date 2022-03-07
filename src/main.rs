@@ -1,10 +1,17 @@
+extern crate nalgebra_glm as glm;
 extern crate sdl2;
 mod scene;
 mod shader;
 use glow::*;
+use scene::camera::Camera;
 use scene::setup::create_scene;
 use scene::texture;
 use scene::vao::VAO;
+
+const WINDOW_HEIGHT: u32 = 1024;
+const WINDOW_WIDTH: u32 = 769;
+const LOOK_SPEED: f32 = 0.005;
+const MOVE_SPEED: f32 = 60.0;
 
 fn main() {
     // Create a context from a sdl2 window
@@ -42,6 +49,9 @@ fn main() {
     let first_frame_time = std::time::Instant::now();
     let mut last_frame_time = first_frame_time;
 
+    // Camera object that holds current position, yaw and pitch
+    let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
+
     'render: loop {
         // Time delta code from gloom-rs
         let now = std::time::Instant::now();
@@ -52,10 +62,15 @@ fn main() {
         for event in events_loop.poll_iter() {
             match event {
                 sdl2::event::Event::KeyDown { keycode, .. } => {
-                    println!("{}", keycode.expect("Could not get keycode :("))
+                    println!("{}", keycode.expect("Could not get keycode :("));
+                    if let Some(keycode_) = keycode {
+                        cam.handle_keys(keycode_, delta_time * MOVE_SPEED);
+                    }
                 }
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
-                    println!("{}, {}", xrel as f32 * delta_time, yrel as f32 * delta_time)
+                    println!("{}, {}", xrel as f32 * delta_time, yrel as f32 * delta_time);
+                    cam.yaw += xrel as f32 * LOOK_SPEED;
+                    cam.pitch += yrel as f32 * LOOK_SPEED;
                 }
                 sdl2::event::Event::Quit { .. } => break 'render,
                 _ => {}
@@ -72,7 +87,8 @@ fn main() {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
             gl.clear(glow::COLOR_BUFFER_BIT);
             shader.activate(&gl);
-            scene_graph.render(&gl, 0);
+            scene_graph.update_transformations(0, &glm::identity());
+            scene_graph.render(&gl, 0, &cam.create_transformation());
             // eh
             window.gl_swap_window();
         }
@@ -101,7 +117,7 @@ unsafe fn create_sdl2_context() -> (
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(3, 0);
     let window = video
-        .window("Secret CRT stash", 1024, 769)
+        .window("Secret CRT stash", WINDOW_HEIGHT, WINDOW_WIDTH)
         .opengl()
         .resizable()
         .build()
