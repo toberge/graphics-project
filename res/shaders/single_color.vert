@@ -1,7 +1,7 @@
 #version 430
 
-in vec3 in_position;
-out vec3 position;
+in layout(location = 0) vec3 in_position;
+out layout(location = 0) vec3 position;
 
 void main() {
     position = in_position;

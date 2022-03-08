@@ -94,7 +94,8 @@ fn main() {
         let square = unsafe { VAO::square(&gl) };
         let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 100, 100) };
         scene_graph.nodes[1].texture = Some(texture.texture);
-        //scene_graph.nodes[2].texture = Some(texture.texture);
+        scene_graph.nodes[6].texture = Some(texture.texture);
+        scene_graph.nodes[7].texture = Some(texture.texture);
 
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
@@ -133,8 +134,12 @@ fn main() {
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 single_color_shader.activate(&gl);
+                gl.uniform_1_f32(
+                    gl.get_uniform_location(single_color_shader.program, "time")
+                        .as_ref(),
+                    time,
+                );
                 square.draw(&gl);
-                //context.swap_buffers().unwrap();
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);

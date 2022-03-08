@@ -156,8 +156,8 @@ impl VAO {
             gl,
             &vec![-1., -1., 0., 1., -1., 0., 1., 1., 0., -1., 1., 0.],
             &vec![0., 0., -1.].repeat(4),
-            &vec![0., 0.].repeat(4),         // UV is irrelevant here
-            &vec![1., 1., 1., 1.].repeat(4), // Same goes for color
+            &vec![0., 0., 1., 0., 1., 1., 0., 1.],
+            &vec![1., 1., 1., 1.].repeat(4), // Color is irrelevant here
             &vec![0, 1, 2, 0, 2, 3],
             32.,
         )
