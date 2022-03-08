@@ -28,11 +28,18 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let goose_beak_vao = unsafe { VAO::from_mesh(&gl, &goose_models[1], &goose_materials) };
     let goose_eyes_vao = unsafe { VAO::from_mesh(&gl, &goose_models[2], &goose_materials) };
 
+    let (chair_models, chair_materials) = load_obj("res/models/chair.obj");
+    let chair_vaos = unsafe {
+        chair_models
+            .iter()
+            .map(|model| VAO::from_mesh(&gl, &model, &chair_materials))
+    };
+
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
     let mut test_node = Node::new(NodeType::Screen);
     test_node.vao = Some(test_vao);
-    test_node.position = glm::vec3(0., 0., -20.);
+    test_node.position = glm::vec3(0., 0., 20.);
 
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
@@ -50,6 +57,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut square_node = Node::new(NodeType::Screen);
     square_node.vao = Some(square_vao);
     square_node.position.z -= 4.;
+    square_node.position.y -= 4.;
 
     let mut goose_node = Node::new(NodeType::Geometry);
     let mut goose_beak_node = Node::new(NodeType::Geometry);
@@ -67,6 +75,29 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     scene_graph.add_child(0, square_node);
     scene_graph.add_child(0, crt_node2);
     scene_graph.add_child(8, screen_node2);
+
+    for (x, y) in vec![
+        (0., 5.),
+        (5., 0.),
+        (5., 5.),
+        (5., -5.),
+        (-5., -5.),
+        (-5., 5.),
+        (-5., 0.),
+        (0., -5.),
+    ] {
+        let mut chair_node = Node::new(NodeType::Geometry);
+        chair_node.position.x = x;
+        chair_node.position.y = -0.5;
+        chair_node.position.z = y;
+        let chair_index = scene_graph.add_child(0, chair_node);
+        // TODO avoid clone()
+        chair_vaos.clone().for_each(|vao| {
+            let mut part_node = Node::new(NodeType::Geometry);
+            part_node.vao = Some(vao);
+            scene_graph.add_child(chair_index, part_node);
+        });
+    }
 
     scene_graph
 }

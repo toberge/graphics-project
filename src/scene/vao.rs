@@ -136,7 +136,6 @@ impl VAO {
             .expect("No material in texture; abort!");
         // Repeat single-color material
         let mut colors: Vec<f32> = materials[id].diffuse.to_vec();
-        println!("{:?}", colors);
         colors.push(1.0);
         colors = colors.repeat(model.mesh.indices.len());
         VAO::new(

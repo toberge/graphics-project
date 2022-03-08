@@ -91,9 +91,8 @@ fn main() {
         scene_graph.final_shader = Some(shader.program);
 
         // temp test of texture stuff
-        let square = unsafe { VAO::square(&gl) };
-        let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 100, 100) };
-        scene_graph.nodes[1].texture = Some(texture.texture);
+        let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 400, 400) };
+        //scene_graph.nodes[1].texture = Some(texture.texture);
         scene_graph.nodes[6].texture = Some(texture.texture);
         scene_graph.nodes[7].texture = Some(texture.texture);
         scene_graph.nodes[9].texture = Some(texture.texture);
@@ -104,6 +103,9 @@ fn main() {
         // Camera object that holds current position, yaw and pitch
         let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
         cam.z += 10.;
+
+        let mut pitch = 0.;
+        let mut yaw = 0.;
 
         loop {
             // Time delta code from gloom-rs
@@ -123,6 +125,9 @@ fn main() {
                 if let Ok(mut delta) = mouse_delta.lock() {
                     cam.yaw += delta.0 * LOOK_SPEED;
                     cam.pitch += delta.1 * LOOK_SPEED;
+                    //yaw += delta.0 * LOOK_SPEED;
+                    //pitch += delta.1 * LOOK_SPEED;
+                    //println!("{} {}", pitch, yaw);
                     *delta = (0.0, 0.0);
                 }
             }
@@ -142,7 +147,7 @@ fn main() {
                 //);
                 //square.draw(&gl);
                 shader.activate(&gl);
-                scene_graph.render_in_terms_of(&gl, 1, time);
+                scene_graph.render_in_terms_of(&gl, 6, pitch, yaw);
 
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
