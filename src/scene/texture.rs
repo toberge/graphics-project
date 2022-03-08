@@ -7,7 +7,12 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub unsafe fn framebuffer_texture(gl: &glow::Context, width: i32, height: i32) -> Texture {
+    pub unsafe fn framebuffer_texture(
+        gl: &glow::Context,
+        width: i32,
+        height: i32,
+        attachment: u32,
+    ) -> Texture {
         let framebuffer = gl
             .create_framebuffer()
             .expect("Could not create framebuffer");
@@ -19,7 +24,7 @@ impl Texture {
         gl.tex_image_2d(
             glow::TEXTURE_2D,
             0,
-            glow::RGBA as i32, // TODO is this right???
+            glow::RGBA as i32,
             width,
             height,
             0,
@@ -40,11 +45,11 @@ impl Texture {
         );
 
         // Attach texture to framebuffer
-        gl.framebuffer_texture(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, Some(texture), 0);
-        gl.draw_buffer(glow::COLOR_ATTACHMENT0);
+        gl.framebuffer_texture(glow::FRAMEBUFFER, attachment, Some(texture), 0);
+        gl.draw_buffer(attachment);
 
         if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-            panic!("Framebuffer creation failed!",);
+            panic!("Framebuffer creation failed!");
         }
 
         Texture {

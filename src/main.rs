@@ -77,14 +77,6 @@ fn main() {
             shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag")
         };
 
-        let single_color_shader = unsafe {
-            shader::Shader::new(
-                &gl,
-                "res/shaders/single_color.vert",
-                "res/shaders/single_color.frag",
-            )
-        };
-
         let mut scene_graph = create_scene(&gl);
         scene_graph.final_shader = Some(shader.program);
 
@@ -126,6 +118,8 @@ fn main() {
             unsafe {
                 // Update transformations
                 scene_graph.update_transformations(0, &glm::identity());
+                // Render content
+                scene_graph.render_screens(&gl, time);
                 // Render reflections
                 scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene

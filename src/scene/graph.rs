@@ -49,7 +49,7 @@ pub struct SceneGraph {
     // Scene graph needs access to shaders during rendering
     pub final_shader: Option<NativeProgram>,
     pub reflection_shader: Option<NativeProgram>,
-    pub screen_shaders: Vec<NativeProgram>,
+    pub screen_shaders: Vec<(NativeProgram, Texture)>,
 }
 
 impl Node {
@@ -135,23 +135,25 @@ impl SceneGraph {
         }
     }
 
-    pub unsafe fn render_reflections(&self, gl: &glow::Context) {
-        //single_color_shader.activate(&gl);
-        //gl.uniform_1_f32(
-        //    gl.get_uniform_location(single_color_shader.program, "time")
-        //        .as_ref(),
-        //    time,
-        //);
+    pub unsafe fn render_screens(&self, gl: &glow::Context, time: f32) {
         let canvas = VAO::square(gl);
+        for (shader, texture) in self.screen_shaders.clone() {
+            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+            gl.use_program(Some(shader));
+            gl.uniform_1_f32(gl.get_uniform_location(shader, "time").as_ref(), time);
+            canvas.draw(&gl);
+        }
+    }
+
+    pub unsafe fn render_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
-            println!("Rendering refl for node {}", node_index);
             let texture = self.nodes[node_index].reflection_texture.expect(&format!(
                 "Node {} was not assigned reflection texture",
                 node_index
             ));
             gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-            canvas.draw(&gl);
             gl.use_program(self.final_shader);
             self.render_in_terms_of(&gl, node_index);
         }
@@ -283,6 +285,6 @@ impl SceneGraph {
             .map_or_else(|| return, |shader| gl.delete_program(shader));
         self.screen_shaders
             .iter()
-            .for_each(|&shader| gl.delete_program(shader));
+            .for_each(|&(shader, _)| gl.delete_program(shader));
     }
 }

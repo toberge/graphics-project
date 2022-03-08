@@ -1,5 +1,7 @@
 use std::f32::consts::PI;
 
+use crate::shader;
+
 use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::Texture;
 use super::vao::{load_obj, VAO};
@@ -7,22 +9,10 @@ use glm;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create VAOs
-    let test_vao = unsafe {
-        VAO::new(
-            &gl,
-            &vec![0.7, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &vec![0.0, 0.0, 1.0, 0.0].repeat(3),
-            &vec![0., 1., 0., 0., 1., 0.],
-            &vec![0.0, 1.0, 0.0, 1.0].repeat(3),
-            &vec![0, 1, 2],
-            32.,
-        )
-    };
     let (models, materials) = load_obj("res/models/crt.obj");
     let crt_vao = unsafe { VAO::from_mesh(&gl, &models[0], &materials) };
     let (screen_models, screen_materials) = load_obj("res/models/crt_screen.obj");
     let screen_vao = unsafe { VAO::from_mesh(&gl, &screen_models[0], &screen_materials) };
-    let square_vao = unsafe { VAO::square(&gl) };
 
     let (goose_models, goose_materials) = load_obj("res/models/goose.obj");
     let goose_body_vao = unsafe { VAO::from_mesh(&gl, &goose_models[0], &goose_materials) };
@@ -38,11 +28,9 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
-    let mut test_node = Node::new(NodeType::Screen);
-    test_node.vao = Some(test_vao);
-    test_node.position = glm::vec3(0., 0., 20.);
 
-    let crt_texture = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture =
+        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT0) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     crt_node.position.z = 1.;
@@ -50,7 +38,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node.vao = Some(screen_vao);
     screen_node.reflection_texture = Some(crt_texture);
 
-    let crt_texture2 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture2 =
+        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT1) };
     let mut crt_node2 = Node::new(NodeType::Geometry);
     crt_node2.vao = Some(crt_vao);
     crt_node2.rotation.y = PI / 2.;
@@ -59,7 +48,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node2.vao = Some(screen_vao);
     screen_node2.reflection_texture = Some(crt_texture2);
 
-    let crt_texture3 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture3 =
+        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT2) };
     let mut crt_node3 = Node::new(NodeType::Geometry);
     crt_node3.vao = Some(crt_vao);
     crt_node3.rotation.y = PI;
@@ -68,10 +58,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node3.vao = Some(screen_vao);
     screen_node3.reflection_texture = Some(crt_texture3);
 
-    let mut square_node = Node::new(NodeType::Screen);
-    square_node.vao = Some(square_vao);
-    square_node.position.z -= 4.;
-    square_node.position.y -= 4.;
+    //let crt_texture4 =
+    //unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT3) };
+    //let mut crt_node4 = Node::new(NodeType::Geometry);
+    //crt_node4.vao = Some(crt_vao);
+    //crt_node4.rotation.y = -PI / 2.;
+    //crt_node4.position.x = -1.;
+    //let mut screen_node4 = Node::new(NodeType::Geometry);
+    //screen_node4.vao = Some(screen_vao);
+    //screen_node4.reflection_texture = Some(crt_texture4);
 
     let mut goose_node = Node::new(NodeType::Geometry);
     let mut goose_beak_node = Node::new(NodeType::Geometry);
@@ -79,6 +74,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     goose_node.vao = Some(goose_body_vao);
     goose_beak_node.vao = Some(goose_beak_vao);
     goose_eyes_node.vao = Some(goose_eyes_vao);
+
+    let single_color_shader = unsafe {
+        shader::Shader::new(
+            &gl,
+            "res/shaders/single_color.vert",
+            "res/shaders/single_color.frag",
+        )
+    };
+    //scene_graph.screen_shaders = vec![(single_color_shader.program, crt_texture4)];
 
     scene_graph.add_child(0, crt_node);
     scene_graph.add_child(0, goose_node);
@@ -89,6 +93,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     scene_graph.add_child(6, screen_node2);
     scene_graph.add_child(0, crt_node3);
     scene_graph.add_child(8, screen_node3);
+    //scene_graph.add_child(0, crt_node4);
+    //scene_graph.add_child(10, screen_node4);
 
     for (x, y) in vec![
         (0., 5.),
