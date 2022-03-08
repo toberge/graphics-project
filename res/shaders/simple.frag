@@ -3,23 +3,26 @@ precision mediump float;
 
 in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 normal_in;
-in layout(location = 2) vec2 textureCoordinates;
+in layout(location = 2) vec2 uv;
 in layout(location = 3) vec4 color_in;
 
 uniform int use_texture;
+uniform int use_reflection;
 
 uniform float shininess;
 uniform vec3 camera_position;
 
 uniform layout(binding = 0) sampler2D sampler;
+uniform layout(binding = 1) sampler2D reflection_sampler;
 
 out vec4 color;
 
 void main() {
     vec3 normal = normalize(normal_in);
     vec3 diffuse_reflection;
-    if (use_texture == 1) {
-        diffuse_reflection = texture(sampler, textureCoordinates).rgb;
+    if (use_reflection == 1 || use_texture == 1) {
+        // TODO fix the texture units being the same
+        diffuse_reflection = texture(sampler, uv).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
     }

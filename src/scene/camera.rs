@@ -1,7 +1,5 @@
 use glm;
 use glutin::event::VirtualKeyCode;
-use sdl2::keyboard::Keycode;
-use sdl2::sys::KeyCode;
 
 // Copy-paste from assignments before Christmas
 // Not intended for final use, should be useful for testing

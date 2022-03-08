@@ -12,8 +12,6 @@ use glutin::event::{
 use glutin::event_loop::ControlFlow;
 use scene::camera::Camera;
 use scene::setup::create_scene;
-use scene::texture;
-use scene::vao::VAO;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 
@@ -90,13 +88,6 @@ fn main() {
         let mut scene_graph = create_scene(&gl);
         scene_graph.final_shader = Some(shader.program);
 
-        // temp test of texture stuff
-        let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 400, 400) };
-        //scene_graph.nodes[1].texture = Some(texture.texture);
-        scene_graph.nodes[6].texture = Some(texture.texture);
-        scene_graph.nodes[7].texture = Some(texture.texture);
-        scene_graph.nodes[9].texture = Some(texture.texture);
-
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
 
@@ -135,20 +126,8 @@ fn main() {
             unsafe {
                 // Update transformations
                 scene_graph.update_transformations(0, &glm::identity());
-                // Render texture
-                gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
-                gl.clear_color(0.1, 0.2, 0.3, 1.0);
-                gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-                //single_color_shader.activate(&gl);
-                //gl.uniform_1_f32(
-                //    gl.get_uniform_location(single_color_shader.program, "time")
-                //        .as_ref(),
-                //    time,
-                //);
-                //square.draw(&gl);
-                shader.activate(&gl);
-                scene_graph.render_in_terms_of(&gl, 6, pitch, yaw);
-
+                // Render reflections
+                scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);

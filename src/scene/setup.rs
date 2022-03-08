@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 
 use super::graph::{Node, NodeType, SceneGraph};
+use super::texture::Texture;
 use super::vao::{load_obj, VAO};
 use glm;
 
@@ -41,18 +42,31 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     test_node.vao = Some(test_vao);
     test_node.position = glm::vec3(0., 0., 20.);
 
+    let crt_texture = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     crt_node.position.z = 1.;
     let mut screen_node = Node::new(NodeType::Screen);
     screen_node.vao = Some(screen_vao);
+    screen_node.reflection_texture = Some(crt_texture);
 
+    let crt_texture2 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
     let mut crt_node2 = Node::new(NodeType::Geometry);
     crt_node2.vao = Some(crt_vao);
     crt_node2.rotation.y = PI / 2.;
     crt_node2.position.x = 1.;
     let mut screen_node2 = Node::new(NodeType::Screen);
     screen_node2.vao = Some(screen_vao);
+    screen_node2.reflection_texture = Some(crt_texture2);
+
+    let crt_texture3 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let mut crt_node3 = Node::new(NodeType::Geometry);
+    crt_node3.vao = Some(crt_vao);
+    crt_node3.rotation.y = PI;
+    crt_node3.position.z = -1.;
+    let mut screen_node3 = Node::new(NodeType::Screen);
+    screen_node3.vao = Some(screen_vao);
+    screen_node3.reflection_texture = Some(crt_texture3);
 
     let mut square_node = Node::new(NodeType::Screen);
     square_node.vao = Some(square_vao);
@@ -66,15 +80,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     goose_beak_node.vao = Some(goose_beak_vao);
     goose_eyes_node.vao = Some(goose_eyes_vao);
 
-    scene_graph.add_child(0, test_node);
     scene_graph.add_child(0, crt_node);
     scene_graph.add_child(0, goose_node);
-    scene_graph.add_child(3, goose_beak_node);
-    scene_graph.add_child(3, goose_eyes_node);
-    scene_graph.add_child(2, screen_node);
-    scene_graph.add_child(0, square_node);
+    scene_graph.add_child(2, goose_beak_node);
+    scene_graph.add_child(2, goose_eyes_node);
+    scene_graph.add_child(1, screen_node);
     scene_graph.add_child(0, crt_node2);
-    scene_graph.add_child(8, screen_node2);
+    scene_graph.add_child(6, screen_node2);
+    scene_graph.add_child(0, crt_node3);
+    scene_graph.add_child(8, screen_node3);
 
     for (x, y) in vec![
         (0., 5.),

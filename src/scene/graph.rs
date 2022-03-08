@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use glm;
 use glow::*;
 
-use super::vao::VAO;
+use super::{texture::Texture, vao::VAO};
 
 pub enum NodeType {
     Root,
@@ -20,7 +20,8 @@ pub struct Node {
 
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
-    pub texture: Option<NativeTexture>,
+    pub texture: Option<Texture>,
+    pub reflection_texture: Option<Texture>,
     pub shader: Option<NativeShader>,
     pub emission_color: glm::Vec3,
 
@@ -60,6 +61,7 @@ impl Node {
             kind,
             vao: None,
             texture: None,
+            reflection_texture: None,
             shader: None,
             emission_color: glm::zero(),
             position: glm::zero(),
@@ -133,14 +135,30 @@ impl SceneGraph {
         }
     }
 
+    pub unsafe fn render_reflections(&self, gl: &glow::Context) {
+        //single_color_shader.activate(&gl);
+        //gl.uniform_1_f32(
+        //    gl.get_uniform_location(single_color_shader.program, "time")
+        //        .as_ref(),
+        //    time,
+        //);
+        let canvas = VAO::square(gl);
+        for node_index in self.cameras.clone() {
+            println!("Rendering refl for node {}", node_index);
+            let texture = self.nodes[node_index].reflection_texture.expect(&format!(
+                "Node {} was not assigned reflection texture",
+                node_index
+            ));
+            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+            canvas.draw(&gl);
+            gl.use_program(self.final_shader);
+            self.render_in_terms_of(&gl, node_index);
+        }
+    }
+
     // TODO render_reflections and render_screens?
-    pub unsafe fn render_in_terms_of(
-        &self,
-        gl: &glow::Context,
-        node_index: usize,
-        pitch: f32,
-        yaw: f32,
-    ) {
+    pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
 
         let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
@@ -164,7 +182,6 @@ impl SceneGraph {
         with_reflection: bool,
     ) {
         let node = &self.nodes[node_index];
-        let use_texture = !matches!(node.kind, NodeType::Screen) || with_reflection;
         if let Some(vao) = &node.vao {
             // Test uniform loc:
             //match gl.get_uniform_location(self.final_shader.unwrap(), "model_transform") {
@@ -204,25 +221,43 @@ impl SceneGraph {
             );
 
             // Bind texture if one exists, and indicate whether the model has a texture or not
-            if use_texture {
-                if let Some(texture) = node.texture {
+            if let Some(texture) = node.texture {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        .as_ref(),
+                    1,
+                );
+                gl.bind_texture(glow::TEXTURE0, Some(texture.texture));
+                gl.active_texture(glow::TEXTURE0);
+            } else {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        .as_ref(),
+                    0,
+                );
+            }
+
+            // Do the same for reflection texture
+            if with_reflection {
+                if let Some(reflection) = node.reflection_texture {
                     gl.uniform_1_i32(
-                        gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                             .as_ref(),
                         1,
                     );
-                    gl.bind_texture(glow::TEXTURE0, Some(texture));
-                    gl.active_texture(glow::TEXTURE0);
+                    // TODO apparently this TEXTURE1 thing is just ignored and it is sampler no 0 that is used
+                    gl.bind_texture(glow::TEXTURE1, Some(reflection.texture));
+                    gl.active_texture(glow::TEXTURE1);
                 } else {
                     gl.uniform_1_i32(
-                        gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                             .as_ref(),
                         0,
                     );
                 }
             } else {
                 gl.uniform_1_i32(
-                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                         .as_ref(),
                     0,
                 );
