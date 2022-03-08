@@ -28,7 +28,7 @@ void main() {
 
     for (int i = 0; i < 1; i++) {
         //vec3 light = lightSource.position;
-        vec3 light = vec3(3., 4., 0.);
+        vec3 light = vec3(3., 0., 0.);
         float S = 1;
 
         // Attenuation (reduces reach of lightsource)
@@ -55,6 +55,6 @@ void main() {
 
     }
 
-    //color = vec4(lighting, 1.);
-    color = vec4(diffuse_reflection, 1.);
+    color = vec4(lighting, 1.);
+    //color = vec4(diffuse_reflection, 1.);
 }

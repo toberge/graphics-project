@@ -96,6 +96,7 @@ fn main() {
         scene_graph.nodes[1].texture = Some(texture.texture);
         scene_graph.nodes[6].texture = Some(texture.texture);
         scene_graph.nodes[7].texture = Some(texture.texture);
+        scene_graph.nodes[9].texture = Some(texture.texture);
 
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;

@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use super::graph::{Node, NodeType, SceneGraph};
 use super::vao::{load_obj, VAO};
 use glm;
@@ -34,9 +36,16 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
+    crt_node.position.z = 1.;
     let mut screen_node = Node::new(NodeType::Geometry);
-    println!("{:?}", screen_models[0].mesh.texcoords);
     screen_node.vao = Some(screen_vao);
+
+    let mut crt_node2 = Node::new(NodeType::Geometry);
+    crt_node2.vao = Some(crt_vao);
+    crt_node2.rotation.y = PI / 2.;
+    crt_node2.position.x = 1.;
+    let mut screen_node2 = Node::new(NodeType::Geometry);
+    screen_node2.vao = Some(screen_vao);
 
     let mut square_node = Node::new(NodeType::Geometry);
     square_node.vao = Some(square_vao);
@@ -56,6 +65,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     scene_graph.add_child(3, goose_eyes_node);
     scene_graph.add_child(2, screen_node);
     scene_graph.add_child(0, square_node);
+    scene_graph.add_child(0, crt_node2);
+    scene_graph.add_child(8, screen_node2);
 
     scene_graph
 }

@@ -81,10 +81,11 @@ impl SceneGraph {
         }
     }
 
-    pub fn add_child(&mut self, parent_index: usize, child: Node) {
+    pub fn add_child(&mut self, parent_index: usize, child: Node) -> usize {
         self.nodes.push(child);
         let child_index = self.nodes.len() - 1;
         self.nodes[parent_index].add_child(child_index);
+        child_index
     }
 
     pub fn update_transformations(&mut self, node_index: usize, transformation_so_far: &glm::Mat4) {
