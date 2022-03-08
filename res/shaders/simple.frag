@@ -28,20 +28,20 @@ void main() {
 
     for (int i = 0; i < 1; i++) {
         //vec3 light = lightSource.position;
-        vec3 light = vec3(1., 4., 0.);
-        float S = 1.;
+        vec3 light = vec3(3., 4., 0.);
+        float S = 1;
 
         // Attenuation (reduces reach of lightsource)
-        float la = 0.001;
-        float lb = 0.003;
-        float lc = 0.002;
+        float la = 0.01;
+        float lb = 0.03;
+        float lc = 0.02;
         float d = length(light - position);
         float L = 1 / (la + d*lb + d*d*lc);
 
         // Phong model
         // Parameters – note that specular reflection is independent of surface color!
         vec3 specular_reflection = vec3(1.0, 1.0, 1.0);
-        vec3 lightColor = vec3(0.1, 0.1, 0.1);
+        vec3 lightColor = vec3(0.4, 0.4, 0.4);
         // Vectors
         vec3 lightDir = normalize(light - position);
         vec3 camDir = normalize(camera_position - position);
@@ -55,8 +55,6 @@ void main() {
 
     }
 
-    //color = vec4((normal + 1.) / 2., 1.);
-    //color = vec4((camera_position + 1.) / 2., 1.);
     color = vec4(lighting, 1.);
     //color = texture(sampler, textureCoordinates);
 }

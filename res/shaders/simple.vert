@@ -19,8 +19,7 @@ void main() {
     textureCoordinates = textureCoordinates_in;
     color = color_in;
 
-    normal = normalize(normal_transform * normal);
-    //normal = normalize(normal_transform[0].xyz);
+    normal = normalize(normal_transform * normal_in);
     position = vec3(model_transform * vec4(position_in, 1.));
     gl_Position = view_transform * vec4(position_in, 1.0);
 }
