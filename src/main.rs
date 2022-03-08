@@ -1,151 +1,246 @@
 extern crate nalgebra_glm as glm;
-extern crate sdl2;
 mod scene;
 mod shader;
 use glow::*;
+use glutin::event::{
+    DeviceEvent,
+    ElementState::{Pressed, Released},
+    Event, KeyboardInput,
+    VirtualKeyCode::{self, *},
+    WindowEvent,
+};
+use glutin::event_loop::ControlFlow;
 use scene::camera::Camera;
 use scene::setup::create_scene;
 use scene::texture;
 use scene::vao::VAO;
+use std::sync::{Arc, Mutex, RwLock};
+use std::thread;
 
-const WINDOW_HEIGHT: u32 = 1024;
-const WINDOW_WIDTH: u32 = 769;
+const WINDOW_WIDTH: u32 = 1024;
+const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 60.0;
+const MOUSE_LOOK: bool = true;
 
 fn main() {
-    // Create a context from a sdl2 window
-    let (gl, window, mut events_loop, _context) = unsafe { create_sdl2_context() };
+    ///// This is from gloom-rs as well /////
 
-    // Set OpenGL options
-    unsafe {
-        // TODO :))))))
-        gl.enable(glow::DEPTH_TEST);
-        gl.depth_func(glow::LESS);
-        gl.enable(glow::CULL_FACE);
-        gl.disable(glow::MULTISAMPLE);
-        gl.enable(glow::BLEND);
-        gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+    // Set up the necessary objects to deal with windows and event handling
+    let el = glutin::event_loop::EventLoop::new();
+    let wb = glutin::window::WindowBuilder::new()
+        .with_title("Gloom-rs")
+        .with_resizable(false)
+        .with_inner_size(glutin::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT));
+    let cb = glutin::ContextBuilder::new().with_vsync(true);
+    let windowed_context = cb.build_windowed(wb, &el).unwrap();
+    // Use mouse controls with invisible mouse confined to the screen.
+    if MOUSE_LOOK {
+        windowed_context
+            .window()
+            .set_cursor_grab(true)
+            .expect("failed to grab cursor");
+        windowed_context.window().set_cursor_visible(false);
     }
 
-    // Create a shader program from source
-    let shader =
-        unsafe { shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag") };
+    // Set up a shared vector for keeping track of currently pressed keys
+    let arc_pressed_keys = Arc::new(Mutex::new(Vec::<VirtualKeyCode>::with_capacity(10)));
+    // Make a reference of this vector to send to the render thread
+    let pressed_keys = Arc::clone(&arc_pressed_keys);
 
-    let single_color_shader = unsafe {
-        shader::Shader::new(
-            &gl,
-            "res/shaders/single_color.vert",
-            "res/shaders/single_color.frag",
-        )
-    };
+    // Set up shared tuple for tracking mouse movement between frames
+    let arc_mouse_delta = Arc::new(Mutex::new((0f32, 0f32)));
+    // Make a reference of this tuple to send to the render thread
+    let mouse_delta = Arc::clone(&arc_mouse_delta);
 
-    let mut scene_graph = create_scene(&gl);
-    scene_graph.final_shader = Some(shader.program);
+    // Spawn a separate thread for rendering, so event handling doesn't block rendering
+    let render_thread = thread::spawn(move || {
+        // Acquire the OpenGL Context and load the function pointers. This has to be done inside of the rendering thread, because
+        // an active OpenGL context cannot safely traverse a thread boundary
+        let (context, gl) = unsafe {
+            let c = windowed_context.make_current().unwrap();
+            let gl = glow::Context::from_loader_function(|s| c.get_proc_address(s) as *const _);
+            (c, gl)
+        };
 
-    // temp test of texture stuff
-    let square = unsafe { VAO::square(&gl) };
-    let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 100, 100) };
-    scene_graph.nodes[1].texture = Some(texture.texture);
-    //scene_graph.nodes[2].texture = Some(texture.texture);
+        // Set OpenGL options
+        unsafe {
+            // TODO :))))))
+            gl.enable(glow::DEPTH_TEST);
+            gl.depth_func(glow::LESS);
+            gl.enable(glow::CULL_FACE);
+            gl.disable(glow::MULTISAMPLE);
+            gl.enable(glow::BLEND);
+            gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+        }
 
-    unsafe {
-        shader.activate(&gl);
+        // Create a shader program from source
+        let shader = unsafe {
+            shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag")
+        };
 
-        // Upload some uniforms
-        gl.uniform_1_f32(shader.get_uniform_location(&gl, "blue").as_ref(), 0.8);
+        let single_color_shader = unsafe {
+            shader::Shader::new(
+                &gl,
+                "res/shaders/single_color.vert",
+                "res/shaders/single_color.frag",
+            )
+        };
 
-        gl.clear_color(0.1, 0.2, 0.3, 1.0);
-    }
+        let mut scene_graph = create_scene(&gl);
+        scene_graph.final_shader = Some(shader.program);
 
-    let first_frame_time = std::time::Instant::now();
-    let mut last_frame_time = first_frame_time;
+        // temp test of texture stuff
+        let square = unsafe { VAO::square(&gl) };
+        let texture = unsafe { texture::Texture::framebuffer_texture(&gl, 100, 100) };
+        scene_graph.nodes[1].texture = Some(texture.texture);
+        //scene_graph.nodes[2].texture = Some(texture.texture);
 
-    // Camera object that holds current position, yaw and pitch
-    let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
-    cam.z += 10.;
+        let first_frame_time = std::time::Instant::now();
+        let mut last_frame_time = first_frame_time;
 
-    'render: loop {
-        // Time delta code from gloom-rs
-        let now = std::time::Instant::now();
-        let time = now.duration_since(first_frame_time).as_secs_f32();
-        let delta_time = now.duration_since(last_frame_time).as_secs_f32();
-        last_frame_time = now;
-        // Cap at 60 FPS in the worst way ever
-        //unsafe { sdl2::sys::SDL_Delay((16.666 - delta_time * 1000.) as u32) }
+        // Camera object that holds current position, yaw and pitch
+        let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
+        cam.z += 10.;
 
-        for event in events_loop.poll_iter() {
-            match event {
-                sdl2::event::Event::KeyDown { keycode, .. } => {
-                    if let Some(keycode_) = keycode {
-                        cam.handle_keys(keycode_, delta_time * MOVE_SPEED);
-                    }
+        loop {
+            // Time delta code from gloom-rs
+            let now = std::time::Instant::now();
+            let time = now.duration_since(first_frame_time).as_secs_f32();
+            let delta_time = now.duration_since(last_frame_time).as_secs_f32();
+            last_frame_time = now;
+
+            // Handle keyboard input
+            if let Ok(keys) = pressed_keys.lock() {
+                for key in keys.iter() {
+                    cam.handle_keys(key, delta_time * MOVE_SPEED);
                 }
-                sdl2::event::Event::MouseMotion { xrel, yrel, .. } => {
-                    cam.yaw += xrel as f32 * LOOK_SPEED;
-                    cam.pitch += yrel as f32 * LOOK_SPEED;
+            }
+            // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
+            if MOUSE_LOOK {
+                if let Ok(mut delta) = mouse_delta.lock() {
+                    cam.yaw += delta.0 * LOOK_SPEED;
+                    cam.pitch += delta.1 * LOOK_SPEED;
+                    *delta = (0.0, 0.0);
                 }
-                sdl2::event::Event::Quit { .. } => break 'render,
-                _ => {}
+            }
+
+            unsafe {
+                // Update transformations
+                scene_graph.update_transformations(0, &glm::identity());
+                // Render texture
+                gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+                gl.clear_color(0.1, 0.2, 0.3, 1.0);
+                gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+                single_color_shader.activate(&gl);
+                square.draw(&gl);
+                //context.swap_buffers().unwrap();
+                // Reset framebuffer and render scene
+                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+                gl.clear_color(0.1, 0.2, 0.3, 1.0);
+                gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+                shader.activate(&gl);
+                scene_graph.render(
+                    &gl,
+                    0,
+                    &cam.create_transformation(),
+                    &glm::vec3(cam.x, cam.y, cam.z),
+                );
+                // eh
+                context.swap_buffers().unwrap();
             }
         }
 
-        unsafe {
-            // Update transformations
-            scene_graph.update_transformations(0, &glm::identity());
-            // Render texture
-            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
-            //gl.clear(glow::COLOR_BUFFER_BIT);
-            single_color_shader.activate(&gl);
-            square.draw(&gl);
-            window.gl_swap_window();
-            // Reset framebuffer and render scene
-            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
-            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-            shader.activate(&gl);
-            scene_graph.render(
-                &gl,
-                0,
-                &cam.create_transformation(),
-                &glm::vec3(cam.x, cam.y, cam.z),
-            );
-            // eh
-            window.gl_swap_window();
+        //unsafe {
+        //    // Clean up
+        //    scene_graph.teardown(&gl);
+
+        //    // (extra stuff)
+        //    single_color_shader.destroy(&gl);
+        //    square.destroy(&gl);
+        //}
+    });
+
+    ///// The rest is from gloom-rs as well /////
+
+    // Keep track of the health of the rendering thread
+    let render_thread_healthy = Arc::new(RwLock::new(true));
+    let render_thread_watchdog = Arc::clone(&render_thread_healthy);
+    thread::spawn(move || {
+        if !render_thread.join().is_ok() {
+            if let Ok(mut health) = render_thread_watchdog.write() {
+                println!("Render thread panicked!");
+                *health = false;
+            }
         }
-    }
+    });
 
-    unsafe {
-        // Clean up
-        scene_graph.teardown(&gl);
+    // Start the event loop -- This is where window events get handled
+    el.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
 
-        // (extra stuff)
-        single_color_shader.destroy(&gl);
-        square.destroy(&gl);
-    }
-}
+        // Terminate program if render thread panics
+        if let Ok(health) = render_thread_healthy.read() {
+            if *health == false {
+                *control_flow = ControlFlow::Exit;
+            }
+        }
 
-/// From glow tutorial
-unsafe fn create_sdl2_context() -> (
-    glow::Context,
-    sdl2::video::Window,
-    sdl2::EventPump,
-    sdl2::video::GLContext,
-) {
-    let sdl = sdl2::init().unwrap();
-    let video = sdl.video().unwrap();
-    let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(3, 0);
-    let window = video
-        .window("Secret CRT stash", WINDOW_HEIGHT, WINDOW_WIDTH)
-        .opengl()
-        .resizable()
-        //.input_grabbed()
-        .build()
-        .unwrap();
-    let gl_context = window.gl_create_context().unwrap();
-    let gl = glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _);
-    let event_loop = sdl.event_pump().unwrap();
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => {
+                *control_flow = ControlFlow::Exit;
+            }
+            // Keep track of currently pressed keys to send to the rendering thread
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: key_state,
+                                virtual_keycode: Some(keycode),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                if let Ok(mut keys) = arc_pressed_keys.lock() {
+                    match key_state {
+                        Released => {
+                            if keys.contains(&keycode) {
+                                let i = keys.iter().position(|&k| k == keycode).unwrap();
+                                keys.remove(i);
+                            }
+                        }
+                        Pressed => {
+                            if !keys.contains(&keycode) {
+                                keys.push(keycode);
+                            }
+                        }
+                    }
+                }
 
-    (gl, window, event_loop, gl_context)
+                // Handle escape separately
+                match keycode {
+                    Escape => {
+                        *control_flow = ControlFlow::Exit;
+                    }
+                    _ => {}
+                }
+            }
+            Event::DeviceEvent {
+                event: DeviceEvent::MouseMotion { delta },
+                ..
+            } => {
+                // Accumulate mouse movement
+                if let Ok(mut position) = arc_mouse_delta.lock() {
+                    *position = (position.0 + delta.0 as f32, position.1 + delta.1 as f32);
+                }
+            }
+            _ => {}
+        }
+    });
 }

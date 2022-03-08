@@ -1,4 +1,5 @@
 use glm;
+use glutin::event::VirtualKeyCode;
 use sdl2::keyboard::Keycode;
 use sdl2::sys::KeyCode;
 
@@ -57,52 +58,52 @@ impl Camera {
                 * glm::identity()
     }
 
-    pub fn handle_keys(&mut self, keycode: Keycode, delta: f32) {
+    pub fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta: f32) {
         let rot = self.just_rotation();
         match keycode {
-            Keycode::A => {
+            VirtualKeyCode::A => {
                 self.x -= rot[0] * delta;
                 self.y -= rot[4] * delta;
                 self.z -= rot[8] * delta;
             }
-            Keycode::D => {
+            VirtualKeyCode::D => {
                 self.x += rot[0] * delta;
                 self.y += rot[4] * delta;
                 self.z += rot[8] * delta;
             }
             // Use y column for up/down movement
-            Keycode::E => {
+            VirtualKeyCode::E => {
                 self.x += rot[1] * delta;
                 self.y += rot[5] * delta;
                 self.z += rot[9] * delta;
             }
-            Keycode::Q => {
+            VirtualKeyCode::Q => {
                 self.x -= rot[1] * delta;
                 self.y -= rot[5] * delta;
                 self.z -= rot[9] * delta;
             }
             // Use z column for fwd/bkwd movement
-            Keycode::W => {
+            VirtualKeyCode::W => {
                 self.x -= rot[2] * delta;
                 self.y -= rot[6] * delta;
                 self.z -= rot[10] * delta;
             }
-            Keycode::S => {
+            VirtualKeyCode::S => {
                 self.x += rot[2] * delta;
                 self.y += rot[6] * delta;
                 self.z += rot[10] * delta;
             }
-            //Keycode::Left => {
+            //VirtualKeyCode::Left => {
             //    cam.yaw -= delta_time;
             //}
-            //Keycode::Right => {
+            //VirtualKeyCode::Right => {
             //    cam.yaw += delta_time;
             //}
-            //Keycode::Up => {
+            //VirtualKeyCode::Up => {
             //    // TODO the angle might be the opposite here, actually
             //    cam.pitch -= delta_time;
             //}
-            //Keycode::Down => {
+            //VirtualKeyCode::Down => {
             //    cam.pitch += delta_time;
             //}
             _ => {}

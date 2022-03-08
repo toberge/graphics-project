@@ -10,5 +10,6 @@ description = "Project in TDT4230"
 [dependencies]
 glow = "0.11.2"
 sdl2 = { version = "0.34" }
+glutin = "0.27.0"
 nalgebra-glm = "0.16.0"
 tobj = "3.2.1"
