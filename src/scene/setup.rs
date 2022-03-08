@@ -32,7 +32,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut scene_graph = SceneGraph::new();
     let mut test_node = Node::new(NodeType::Screen);
     test_node.vao = Some(test_vao);
-    test_node.position = glm::vec3(0., 0., -3.);
+    test_node.position = glm::vec3(0., 0., -20.);
 
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);

@@ -134,13 +134,16 @@ fn main() {
                 gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-                single_color_shader.activate(&gl);
-                gl.uniform_1_f32(
-                    gl.get_uniform_location(single_color_shader.program, "time")
-                        .as_ref(),
-                    time,
-                );
-                square.draw(&gl);
+                //single_color_shader.activate(&gl);
+                //gl.uniform_1_f32(
+                //    gl.get_uniform_location(single_color_shader.program, "time")
+                //        .as_ref(),
+                //    time,
+                //);
+                //square.draw(&gl);
+                shader.activate(&gl);
+                scene_graph.render_in_terms_of(&gl, 1, time);
+
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
@@ -151,6 +154,7 @@ fn main() {
                     0,
                     &cam.create_transformation(),
                     &glm::vec3(cam.x, cam.y, cam.z),
+                    true,
                 );
                 // eh
                 context.swap_buffers().unwrap();

@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use glm;
 use glow::*;
 
@@ -132,6 +134,20 @@ impl SceneGraph {
     }
 
     // TODO render_reflections and render_screens?
+    pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize, time: f32) {
+        let node = &self.nodes[node_index];
+
+        let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
+        //let camera_transform = perspective * glm::inverse(&node.model_matrix);
+        let camera_position: glm::Vec3 =
+            glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
+        let pitch_rotation: glm::Mat4 = glm::rotation(-PI / 2., &glm::vec3(1.0, 0.0, 0.0));
+        let yaw_rotation: glm::Mat4 = glm::rotation(time, &glm::vec3(0.0, 1.0, 0.0));
+        let camera_transform =
+            perspective * pitch_rotation * yaw_rotation * glm::translation(&-camera_position);
+
+        self.render(gl, self.root, &camera_transform, &camera_position, false);
+    }
 
     pub unsafe fn render(
         &self,
@@ -139,8 +155,10 @@ impl SceneGraph {
         node_index: usize,
         view_transform: &glm::Mat4,
         camera_position: &glm::Vec3,
+        with_reflection: bool,
     ) {
         let node = &self.nodes[node_index];
+        let use_texture = !matches!(node.kind, NodeType::Screen) || with_reflection;
         if let Some(vao) = &node.vao {
             // Test uniform loc:
             //match gl.get_uniform_location(self.final_shader.unwrap(), "model_transform") {
@@ -180,14 +198,22 @@ impl SceneGraph {
             );
 
             // Bind texture if one exists, and indicate whether the model has a texture or not
-            if let Some(texture) = node.texture {
-                gl.uniform_1_i32(
-                    gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
-                        .as_ref(),
-                    1,
-                );
-                gl.bind_texture(glow::TEXTURE0, Some(texture));
-                gl.active_texture(glow::TEXTURE0);
+            if use_texture {
+                if let Some(texture) = node.texture {
+                    gl.uniform_1_i32(
+                        gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                            .as_ref(),
+                        1,
+                    );
+                    gl.bind_texture(glow::TEXTURE0, Some(texture));
+                    gl.active_texture(glow::TEXTURE0);
+                } else {
+                    gl.uniform_1_i32(
+                        gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                            .as_ref(),
+                        0,
+                    );
+                }
             } else {
                 gl.uniform_1_i32(
                     gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
@@ -202,7 +228,7 @@ impl SceneGraph {
 
         // Recurse
         for child in node.children.to_vec() {
-            self.render(gl, child, view_transform, camera_position);
+            self.render(gl, child, view_transform, camera_position, with_reflection);
         }
     }
 

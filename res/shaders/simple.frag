@@ -55,6 +55,6 @@ void main() {
 
     }
 
-    color = vec4(lighting, 1.);
-    //color = vec4(diffuse_reflection, 1.);
+    //color = vec4(lighting, 1.);
+    color = vec4(diffuse_reflection, 1.);
 }
