@@ -30,24 +30,24 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
-    let mut test_node = Node::new(NodeType::Geometry);
+    let mut test_node = Node::new(NodeType::Screen);
     test_node.vao = Some(test_vao);
     test_node.position = glm::vec3(0., 0., -3.);
 
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     crt_node.position.z = 1.;
-    let mut screen_node = Node::new(NodeType::Geometry);
+    let mut screen_node = Node::new(NodeType::Screen);
     screen_node.vao = Some(screen_vao);
 
     let mut crt_node2 = Node::new(NodeType::Geometry);
     crt_node2.vao = Some(crt_vao);
     crt_node2.rotation.y = PI / 2.;
     crt_node2.position.x = 1.;
-    let mut screen_node2 = Node::new(NodeType::Geometry);
+    let mut screen_node2 = Node::new(NodeType::Screen);
     screen_node2.vao = Some(screen_vao);
 
-    let mut square_node = Node::new(NodeType::Geometry);
+    let mut square_node = Node::new(NodeType::Screen);
     square_node.vao = Some(square_vao);
     square_node.position.z -= 4.;
 

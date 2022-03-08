@@ -19,6 +19,8 @@ pub struct Node {
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<NativeTexture>,
+    pub shader: Option<NativeShader>,
+    pub emission_color: glm::Vec3,
 
     pub position: glm::Vec3,
     pub reference_point: glm::Vec3,
@@ -33,6 +35,8 @@ pub struct Node {
 pub struct SceneGraph {
     pub nodes: Vec<Node>,
     pub root: usize,
+    // Light sources must have their positions sent to the shader
+    pub light_sources: Vec<usize>,
     // Nodes to be treated as cameras during reflection rendering
     pub cameras: Vec<usize>,
 
@@ -54,6 +58,8 @@ impl Node {
             kind,
             vao: None,
             texture: None,
+            shader: None,
+            emission_color: glm::zero(),
             position: glm::zero(),
             reference_point: glm::zero(),
             rotation: glm::zero(),
@@ -73,6 +79,7 @@ impl SceneGraph {
         SceneGraph {
             nodes: vec![Node::new(NodeType::Root)],
             root: 0,
+            light_sources: vec![],
             cameras: vec![],
             vaos: vec![],
             final_shader: None,
@@ -81,13 +88,24 @@ impl SceneGraph {
         }
     }
 
+    /// Add a child node and remember it especially well if it is a light source or screen
     pub fn add_child(&mut self, parent_index: usize, child: Node) -> usize {
+        let child_index = self.nodes.len();
+        match child.kind {
+            NodeType::Light => self.light_sources.push(child_index),
+            NodeType::Screen => self.cameras.push(child_index),
+            _ => {}
+        }
         self.nodes.push(child);
-        let child_index = self.nodes.len() - 1;
         self.nodes[parent_index].add_child(child_index);
         child_index
     }
 
+    pub fn get_node(&mut self, node_index: usize) -> &Node {
+        &self.nodes[node_index]
+    }
+
+    /// Update transformation matrices for the whole tree
     pub fn update_transformations(&mut self, node_index: usize, transformation_so_far: &glm::Mat4) {
         let mut node = &mut (self.nodes[node_index]);
         // Construct transformation matrix
