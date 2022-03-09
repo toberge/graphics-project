@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use glm;
 use glow::*;
 
@@ -143,6 +141,7 @@ impl SceneGraph {
             gl.use_program(Some(shader));
             gl.uniform_1_f32(gl.get_uniform_location(shader, "time").as_ref(), time);
             canvas.draw(&gl);
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
     }
 
@@ -156,6 +155,7 @@ impl SceneGraph {
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             gl.use_program(self.final_shader);
             self.render_in_terms_of(&gl, node_index);
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
     }
 

@@ -29,8 +29,11 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
 
-    let crt_texture =
-        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT0) };
+    // TODO the order of these matters for what is rendered :)))
+    let crt_texture4 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture3 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture2 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     crt_node.position.z = 1.;
@@ -38,8 +41,6 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node.vao = Some(screen_vao);
     screen_node.reflection_texture = Some(crt_texture);
 
-    let crt_texture2 =
-        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT1) };
     let mut crt_node2 = Node::new(NodeType::Geometry);
     crt_node2.vao = Some(crt_vao);
     crt_node2.rotation.y = PI / 2.;
@@ -48,8 +49,6 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node2.vao = Some(screen_vao);
     screen_node2.reflection_texture = Some(crt_texture2);
 
-    let crt_texture3 =
-        unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT2) };
     let mut crt_node3 = Node::new(NodeType::Geometry);
     crt_node3.vao = Some(crt_vao);
     crt_node3.rotation.y = PI;
@@ -58,15 +57,13 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     screen_node3.vao = Some(screen_vao);
     screen_node3.reflection_texture = Some(crt_texture3);
 
-    //let crt_texture4 =
-    //unsafe { Texture::framebuffer_texture(&gl, 400, 400, glow::COLOR_ATTACHMENT3) };
-    //let mut crt_node4 = Node::new(NodeType::Geometry);
-    //crt_node4.vao = Some(crt_vao);
-    //crt_node4.rotation.y = -PI / 2.;
-    //crt_node4.position.x = -1.;
-    //let mut screen_node4 = Node::new(NodeType::Geometry);
-    //screen_node4.vao = Some(screen_vao);
-    //screen_node4.reflection_texture = Some(crt_texture4);
+    let mut crt_node4 = Node::new(NodeType::Geometry);
+    crt_node4.vao = Some(crt_vao);
+    crt_node4.rotation.y = -PI / 2.;
+    crt_node4.position.x = -1.;
+    let mut screen_node4 = Node::new(NodeType::Geometry);
+    screen_node4.vao = Some(screen_vao);
+    screen_node4.reflection_texture = Some(crt_texture4);
 
     let mut goose_node = Node::new(NodeType::Geometry);
     let mut goose_beak_node = Node::new(NodeType::Geometry);
@@ -82,7 +79,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
             "res/shaders/single_color.frag",
         )
     };
-    //scene_graph.screen_shaders = vec![(single_color_shader.program, crt_texture4)];
+    scene_graph.screen_shaders = vec![(single_color_shader.program, crt_texture4)];
 
     scene_graph.add_child(0, crt_node);
     scene_graph.add_child(0, goose_node);
@@ -93,8 +90,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     scene_graph.add_child(6, screen_node2);
     scene_graph.add_child(0, crt_node3);
     scene_graph.add_child(8, screen_node3);
-    //scene_graph.add_child(0, crt_node4);
-    //scene_graph.add_child(10, screen_node4);
+    scene_graph.add_child(0, crt_node4);
+    scene_graph.add_child(10, screen_node4);
 
     for (x, y) in vec![
         (0., 5.),
