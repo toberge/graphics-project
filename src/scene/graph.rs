@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use glm;
 use glow::*;
 
@@ -159,18 +161,18 @@ impl SceneGraph {
         }
     }
 
-    // TODO render_reflections and render_screens?
+    /// Render scene tree from the persepective of one particular node
     pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
 
         let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
-        //let camera_transform = perspective * glm::inverse(&node.model_matrix);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
-        let pitch_rotation: glm::Mat4 = glm::rotation(-0.135, &glm::vec3(1.0, 0.0, 0.0));
-        let yaw_rotation: glm::Mat4 = glm::rotation(0.16, &glm::vec3(0.0, 1.0, 0.0));
+        // Specific rotations expefimented forth
+        let pitch_rotation: glm::Mat4 = glm::rotation(-0.12, &glm::vec3(1.0, 0.0, 0.0));
+        let yaw_rotation: glm::Mat4 = glm::rotation(-PI + 0.14, &glm::vec3(0.0, 1.0, 0.0));
         let camera_transform =
-            perspective * pitch_rotation * yaw_rotation * glm::translation(&-camera_position);
+            perspective * pitch_rotation * yaw_rotation * glm::inverse(&node.model_matrix);
 
         self.render(gl, self.root, &camera_transform, &camera_position, false);
     }

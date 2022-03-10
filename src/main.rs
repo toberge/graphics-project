@@ -108,9 +108,8 @@ fn main() {
                 if let Ok(mut delta) = mouse_delta.lock() {
                     cam.yaw += delta.0 * LOOK_SPEED;
                     cam.pitch += delta.1 * LOOK_SPEED;
-                    //yaw += delta.0 * LOOK_SPEED;
-                    //pitch += delta.1 * LOOK_SPEED;
-                    //println!("{} {}", pitch, yaw);
+                    yaw += delta.0 * LOOK_SPEED;
+                    pitch += delta.1 * LOOK_SPEED;
                     *delta = (0.0, 0.0);
                 }
             }

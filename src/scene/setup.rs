@@ -5,14 +5,12 @@ use crate::shader;
 use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::Texture;
 use super::vao::{load_obj, VAO};
-use glm;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create VAOs
     let (models, materials) = load_obj("res/models/crt.obj");
     let crt_vao = unsafe { VAO::from_mesh(&gl, &models[0], &materials) };
-    let (screen_models, screen_materials) = load_obj("res/models/crt_screen.obj");
-    let screen_vao = unsafe { VAO::from_mesh(&gl, &screen_models[0], &screen_materials) };
+    let screen_vao = unsafe { VAO::from_mesh(&gl, &models[1], &materials) };
 
     let (goose_models, goose_materials) = load_obj("res/models/goose.obj");
     let goose_body_vao = unsafe { VAO::from_mesh(&gl, &goose_models[0], &goose_materials) };
