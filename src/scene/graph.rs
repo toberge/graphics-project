@@ -229,8 +229,8 @@ impl SceneGraph {
                         .as_ref(),
                     1,
                 );
-                gl.bind_texture(glow::TEXTURE0, Some(texture.texture));
                 gl.active_texture(glow::TEXTURE0);
+                gl.bind_texture(glow::TEXTURE_2D, Some(texture.texture));
             } else {
                 gl.uniform_1_i32(
                     gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
@@ -248,8 +248,8 @@ impl SceneGraph {
                         1,
                     );
                     // TODO apparently this TEXTURE1 thing is just ignored and it is sampler no 0 that is used
-                    gl.bind_texture(glow::TEXTURE1, Some(reflection.texture));
-                    gl.active_texture(glow::TEXTURE1);
+                    gl.active_texture(glow::TEXTURE0);
+                    gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
