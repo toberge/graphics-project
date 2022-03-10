@@ -20,9 +20,10 @@ out vec4 color;
 void main() {
     vec3 normal = normalize(normal_in);
     vec3 diffuse_reflection;
-    if (use_reflection == 1 || use_texture == 1) {
-        // TODO fix the texture units being the same
+    if (use_texture == 1) {
         diffuse_reflection = texture(sampler, uv).rgb;
+    } else if (use_reflection == 1) {
+        diffuse_reflection = texture(reflection_sampler, uv).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
     }
