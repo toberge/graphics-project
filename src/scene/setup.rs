@@ -23,6 +23,13 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
             .iter()
             .map(|model| VAO::from_mesh(&gl, &model, &chair_materials))
     };
+    let (cube_models, cube_materials) = load_obj("res/models/cube.obj");
+    let cube_vaos: Vec<VAO> = unsafe {
+        cube_models
+            .iter()
+            .map(|model| VAO::from_mesh(&gl, &model, &cube_materials))
+            .collect()
+    };
 
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
@@ -45,7 +52,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_node2.position.x = 1.;
     let mut screen_node2 = Node::new(NodeType::Screen);
     screen_node2.vao = Some(screen_vao);
-    //screen_node2.reflection_texture = Some(crt_texture2);
+    screen_node2.reflection_texture = Some(crt_texture2);
 
     let mut crt_node3 = Node::new(NodeType::Geometry);
     crt_node3.vao = Some(crt_vao);
@@ -53,7 +60,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_node3.position.z = -1.;
     let mut screen_node3 = Node::new(NodeType::Screen);
     screen_node3.vao = Some(screen_vao);
-    //screen_node3.reflection_texture = Some(crt_texture3);
+    screen_node3.reflection_texture = Some(crt_texture3);
 
     let mut crt_node4 = Node::new(NodeType::Geometry);
     crt_node4.vao = Some(crt_vao);
@@ -91,7 +98,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     scene_graph.add_child(0, crt_node4);
     scene_graph.add_child(10, screen_node4);
 
-    for (x, y) in vec![
+    for (i, (x, y)) in vec![
         (0., 5.),
         (5., 0.),
         (5., 5.),
@@ -100,18 +107,23 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         (-5., 5.),
         (-5., 0.),
         (0., -5.),
-    ] {
+    ]
+    .iter()
+    .enumerate()
+    {
         let mut chair_node = Node::new(NodeType::Geometry);
-        chair_node.position.x = x;
+        chair_node.vao = Some(cube_vaos[i]);
+        chair_node.scale = glm::vec3(4., 4., 4.);
+        chair_node.position.x = x * 4.;
         chair_node.position.y = -0.5;
-        chair_node.position.z = y;
+        chair_node.position.z = y * 4.;
         let chair_index = scene_graph.add_child(0, chair_node);
         // TODO avoid clone()
-        chair_vaos.clone().for_each(|vao| {
-            let mut part_node = Node::new(NodeType::Geometry);
-            part_node.vao = Some(vao);
-            scene_graph.add_child(chair_index, part_node);
-        });
+        //chair_vaos.clone().for_each(|vao| {
+        //    let mut part_node = Node::new(NodeType::Geometry);
+        //    part_node.vao = Some(vao);
+        //    scene_graph.add_child(chair_index, part_node);
+        //});
     }
 
     scene_graph

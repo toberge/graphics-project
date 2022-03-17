@@ -154,10 +154,16 @@ impl SceneGraph {
         for node_index in self.cameras.clone() {
             if let Some(texture) = self.nodes[node_index].reflection_texture {
                 gl.use_program(self.final_shader);
-                for (i, &(pitch, yaw)) in
-                    [(0., PI / 2.), (0., -PI / 2.), (0., 0.), (0., 0.), (0., -PI)]
-                        .iter()
-                        .enumerate()
+                for (i, &(pitch, yaw)) in [
+                    (0., PI / 2.),  // +X
+                    (0., -PI / 2.), // -X
+                    (0., 0.),       // +Y
+                    (0., 0.),       // -Y
+                    (0., -PI),      // +Z
+                    (0., 0.),       // -Z
+                ]
+                .iter()
+                .enumerate()
                 {
                     gl.bind_framebuffer(glow::FRAMEBUFFER, Some(texture.framebuffers[i]));
                     gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
@@ -181,9 +187,8 @@ impl SceneGraph {
         let perspective: glm::Mat4 = glm::perspective(1., 0.7, 1.0, 1000.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
-        // Specific rotations expefimented forth
-        let pitch_rotation: glm::Mat4 = glm::rotation(pitch - 0.12, &glm::vec3(1.0, 0.0, 0.0));
-        let yaw_rotation: glm::Mat4 = glm::rotation(yaw + 0.14, &glm::vec3(0.0, 1.0, 0.0));
+        let pitch_rotation: glm::Mat4 = glm::rotation(pitch, &glm::vec3(1.0, 0.0, 0.0));
+        let yaw_rotation: glm::Mat4 = glm::rotation(yaw, &glm::vec3(0.0, 1.0, 0.0));
         let camera_transform =
             perspective * pitch_rotation * yaw_rotation * glm::inverse(&node.model_matrix);
 
