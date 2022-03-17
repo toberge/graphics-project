@@ -29,9 +29,9 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     // TODO the order of these matters for what is rendered :)))
     let crt_texture4 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
-    let crt_texture3 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
-    let crt_texture2 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
-    let crt_texture = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture3 = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
+    let crt_texture2 = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
+    let crt_texture = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
     crt_node.position.z = 1.;
@@ -45,7 +45,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_node2.position.x = 1.;
     let mut screen_node2 = Node::new(NodeType::Screen);
     screen_node2.vao = Some(screen_vao);
-    screen_node2.reflection_texture = Some(crt_texture2);
+    //screen_node2.reflection_texture = Some(crt_texture2);
 
     let mut crt_node3 = Node::new(NodeType::Geometry);
     crt_node3.vao = Some(crt_vao);
@@ -53,7 +53,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_node3.position.z = -1.;
     let mut screen_node3 = Node::new(NodeType::Screen);
     screen_node3.vao = Some(screen_vao);
-    screen_node3.reflection_texture = Some(crt_texture3);
+    //screen_node3.reflection_texture = Some(crt_texture3);
 
     let mut crt_node4 = Node::new(NodeType::Geometry);
     crt_node4.vao = Some(crt_vao);
@@ -61,7 +61,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_node4.position.x = -1.;
     let mut screen_node4 = Node::new(NodeType::Geometry);
     screen_node4.vao = Some(screen_vao);
-    screen_node4.reflection_texture = Some(crt_texture4);
+    screen_node4.texture = Some(crt_texture4);
 
     let mut goose_node = Node::new(NodeType::Geometry);
     let mut goose_beak_node = Node::new(NodeType::Geometry);

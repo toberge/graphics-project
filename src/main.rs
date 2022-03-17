@@ -21,6 +21,31 @@ const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 60.0;
 const MOUSE_LOOK: bool = true;
 
+// Debug callback to panic upon enountering any OpenGL error
+// from gloom-rs :)))))
+pub fn debug_callback(source: u32, e_type: u32, id: u32, severity: u32, error_message: &str) {
+    if e_type != glow::DEBUG_TYPE_ERROR {
+        return;
+    }
+    if severity == glow::DEBUG_SEVERITY_HIGH
+        || severity == glow::DEBUG_SEVERITY_MEDIUM
+        || severity == glow::DEBUG_SEVERITY_LOW
+    {
+        let severity_string = match severity {
+            glow::DEBUG_SEVERITY_HIGH => "high",
+            glow::DEBUG_SEVERITY_MEDIUM => "medium",
+            glow::DEBUG_SEVERITY_LOW => "low",
+            _ => "unknown",
+        };
+        unsafe {
+            panic!(
+                "{}: Error of severity {} raised from {}: {}\n",
+                id, severity_string, source, error_message
+            );
+        }
+    }
+}
+
 fn main() {
     ///// This is from gloom-rs as well /////
 
@@ -63,13 +88,14 @@ fn main() {
 
         // Set OpenGL options
         unsafe {
-            // TODO :))))))
             gl.enable(glow::DEPTH_TEST);
             gl.depth_func(glow::LESS);
             gl.enable(glow::CULL_FACE);
             gl.disable(glow::MULTISAMPLE);
             gl.enable(glow::BLEND);
             gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+            gl.enable(glow::DEBUG_OUTPUT_SYNCHRONOUS);
+            gl.debug_message_callback(debug_callback);
         }
 
         // Create a shader program from source
@@ -85,8 +111,8 @@ fn main() {
 
         // Camera object that holds current position, yaw and pitch
         let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
-        cam.z += 10.;
 
+        cam.z += 10.;
         let mut pitch = 0.;
         let mut yaw = 0.;
 

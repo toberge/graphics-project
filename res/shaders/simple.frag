@@ -13,17 +13,19 @@ uniform float shininess;
 uniform vec3 camera_position;
 
 uniform layout(binding = 0) sampler2D sampler;
-uniform layout(binding = 1) sampler2D reflection_sampler;
+uniform layout(binding = 1) samplerCube reflection_sampler;
 
 out vec4 color;
 
 void main() {
     vec3 normal = normalize(normal_in);
     vec3 diffuse_reflection;
+
+    vec3 camDir = normalize(camera_position - position);
     if (use_texture == 1) {
         diffuse_reflection = texture(sampler, uv).rgb;
     } else if (use_reflection == 1) {
-        diffuse_reflection = texture(reflection_sampler, uv).rgb;
+        diffuse_reflection = texture(reflection_sampler, reflect(-camDir, normal)).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
     }
@@ -48,7 +50,6 @@ void main() {
         vec3 lightColor = vec3(0.4, 0.4, 0.4);
         // Vectors
         vec3 lightDir = normalize(light - position);
-        vec3 camDir = normalize(camera_position - position);
         vec3 reflection = reflect(-lightDir, normal);
 
         // Calculation

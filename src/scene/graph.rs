@@ -3,7 +3,10 @@ use std::f32::consts::PI;
 use glm;
 use glow::*;
 
-use super::{texture::Texture, vao::VAO};
+use super::{
+    texture::{CubemapTexture, Texture},
+    vao::VAO,
+};
 
 pub enum NodeType {
     Root,
@@ -21,7 +24,7 @@ pub struct Node {
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<Texture>,
-    pub reflection_texture: Option<Texture>,
+    pub reflection_texture: Option<CubemapTexture>,
     pub shader: Option<NativeShader>,
     pub emission_color: glm::Vec3,
 
@@ -149,28 +152,38 @@ impl SceneGraph {
 
     pub unsafe fn render_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
-            let texture = self.nodes[node_index].reflection_texture.expect(&format!(
-                "Node {} was not assigned reflection texture",
-                node_index
-            ));
-            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
-            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-            gl.use_program(self.final_shader);
-            self.render_in_terms_of(&gl, node_index);
-            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            if let Some(texture) = self.nodes[node_index].reflection_texture {
+                gl.use_program(self.final_shader);
+                for (i, &(pitch, yaw)) in
+                    [(0., PI / 2.), (0., -PI / 2.), (0., 0.), (0., 0.), (0., -PI)]
+                        .iter()
+                        .enumerate()
+                {
+                    gl.bind_framebuffer(glow::FRAMEBUFFER, Some(texture.framebuffers[i]));
+                    gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+                    self.render_in_terms_of(&gl, node_index, pitch, yaw); // TODO edit this :)))
+                }
+                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            }
         }
     }
 
     /// Render scene tree from the persepective of one particular node
-    pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
+    pub unsafe fn render_in_terms_of(
+        &self,
+        gl: &glow::Context,
+        node_index: usize,
+        pitch: f32,
+        yaw: f32,
+    ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., 0.7, 1.0, 1000.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
         // Specific rotations expefimented forth
-        let pitch_rotation: glm::Mat4 = glm::rotation(-0.12, &glm::vec3(1.0, 0.0, 0.0));
-        let yaw_rotation: glm::Mat4 = glm::rotation(-PI + 0.14, &glm::vec3(0.0, 1.0, 0.0));
+        let pitch_rotation: glm::Mat4 = glm::rotation(pitch - 0.12, &glm::vec3(1.0, 0.0, 0.0));
+        let yaw_rotation: glm::Mat4 = glm::rotation(yaw + 0.14, &glm::vec3(0.0, 1.0, 0.0));
         let camera_transform =
             perspective * pitch_rotation * yaw_rotation * glm::inverse(&node.model_matrix);
 
@@ -187,12 +200,6 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
         if let Some(vao) = &node.vao {
-            // Test uniform loc:
-            //match gl.get_uniform_location(self.final_shader.unwrap(), "model_transform") {
-            //    Some(_) => println!("yay"),
-            //    None => println!("nay"),
-            //}
-
             // Set uniforms (a lot of them)
             gl.uniform_matrix_4_f32_slice(
                 gl.get_uniform_location(self.final_shader.unwrap(), "model_transform")
@@ -250,7 +257,7 @@ impl SceneGraph {
                         1,
                     );
                     gl.active_texture(glow::TEXTURE1);
-                    gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
+                    gl.bind_texture(glow::TEXTURE_CUBE_MAP, Some(reflection.texture));
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
