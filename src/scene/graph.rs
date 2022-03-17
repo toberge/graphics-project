@@ -184,7 +184,7 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., 0.7, 1.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., 0.7, 2.0, 1000.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
         let pitch_rotation: glm::Mat4 = glm::rotation(pitch, &glm::vec3(1.0, 0.0, 0.0));
