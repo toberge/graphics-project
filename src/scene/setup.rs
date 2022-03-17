@@ -41,7 +41,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let crt_texture = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
-    crt_node.position.z = 1.;
+    crt_node.scale = glm::vec3(2., 2., 2.);
+    crt_node.position.z = 2.5;
     let mut screen_node = Node::new(NodeType::Screen);
     screen_node.vao = Some(screen_vao);
     screen_node.reflection_texture = Some(crt_texture);
@@ -49,7 +50,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut crt_node2 = Node::new(NodeType::Geometry);
     crt_node2.vao = Some(crt_vao);
     crt_node2.rotation.y = PI / 2.;
-    crt_node2.position.x = 1.;
+    crt_node2.position.x = 2.5;
+    crt_node2.scale = glm::vec3(2., 2., 2.);
     let mut screen_node2 = Node::new(NodeType::Screen);
     screen_node2.vao = Some(screen_vao);
     screen_node2.reflection_texture = Some(crt_texture2);
@@ -57,7 +59,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut crt_node3 = Node::new(NodeType::Geometry);
     crt_node3.vao = Some(crt_vao);
     crt_node3.rotation.y = PI;
-    crt_node3.position.z = -1.;
+    crt_node3.position.z = -2.5;
+    crt_node3.scale = glm::vec3(2., 2., 2.);
     let mut screen_node3 = Node::new(NodeType::Screen);
     screen_node3.vao = Some(screen_vao);
     screen_node3.reflection_texture = Some(crt_texture3);
@@ -65,7 +68,8 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut crt_node4 = Node::new(NodeType::Geometry);
     crt_node4.vao = Some(crt_vao);
     crt_node4.rotation.y = -PI / 2.;
-    crt_node4.position.x = -1.;
+    crt_node4.position.x = -2.5;
+    crt_node4.scale = glm::vec3(2., 2., 2.);
     let mut screen_node4 = Node::new(NodeType::Geometry);
     screen_node4.vao = Some(screen_vao);
     screen_node4.texture = Some(crt_texture4);
@@ -114,7 +118,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let mut chair_node = Node::new(NodeType::Geometry);
         chair_node.vao = Some(cube_vaos[i]);
         chair_node.scale = glm::vec3(4., 4., 4.);
-        chair_node.position.x = x * 4.;
+        chair_node.position.x = x * 8.;
         chair_node.position.y = -0.5;
         chair_node.position.z = y * 4.;
         let chair_index = scene_graph.add_child(0, chair_node);

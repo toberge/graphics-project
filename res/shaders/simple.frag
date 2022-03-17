@@ -1,6 +1,10 @@
 #version 430
 precision mediump float;
 
+#define FRESNEL_BIAS 0.01
+#define FRESNEL_POWER 2.
+#define FRESNEL_SCALE 0.2
+
 in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 normal_in;
 in layout(location = 2) vec2 uv;
@@ -61,8 +65,11 @@ void main() {
 
     }
 
-    if (use_reflection == 1)
-        color = vec4(diffuse_reflection, 1.);
-    else
+    if (use_reflection == 1) {
+
+        float fresnel_factor = FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(camDir, normal), FRESNEL_POWER);
+        color = vec4(mix(lighting, diffuse_reflection, fresnel_factor), 1.);
+    } else {
         color = vec4(lighting, 1.);
+    }
 }
