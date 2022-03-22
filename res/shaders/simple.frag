@@ -3,8 +3,7 @@ precision mediump float;
 
 #define FRESNEL_BIAS 0.01
 #define FRESNEL_POWER 2.
-#define FRESNEL_SCALE 0.02
-// #define FRESNEL_SCALE 0.05 seems better
+#define FRESNEL_SCALE 0.50
 
 #define MAX_LIGHT_SOURCES 32
 
@@ -79,7 +78,7 @@ void main() {
 
     if (use_reflection == 1) {
 
-        float fresnel_factor = FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(cam_dir, normal), FRESNEL_POWER);
+        float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
         color = vec4(mix(lighting, reflection, fresnel_factor), 1.);
     } else {
         color = vec4(lighting, 1.);
