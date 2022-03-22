@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use glm;
 use glutin::event::VirtualKeyCode;
 
@@ -23,7 +25,7 @@ impl Camera {
             pitch: 0.0,
             perspective: glm::perspective(
                 screen_width as f32 / screen_height as f32,
-                0.5,
+                PI / 2.,
                 1.0,
                 1000.0,
             ),

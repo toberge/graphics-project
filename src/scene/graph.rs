@@ -160,7 +160,7 @@ impl SceneGraph {
         }
     }
 
-    pub unsafe fn render_reflections(&self, gl: &glow::Context) {
+    pub unsafe fn render_reflections(&self, gl: &glow::Context, yaw: f32, pitch: f32) {
         for node_index in self.cameras.clone() {
             if let Some(texture) = self.nodes[node_index].reflection_texture {
                 gl.use_program(self.final_shader);
@@ -177,7 +177,7 @@ impl SceneGraph {
                 {
                     gl.bind_framebuffer(glow::FRAMEBUFFER, Some(texture.framebuffers[i]));
                     gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-                    self.render_in_terms_of(&gl, node_index, &center, &up);
+                    self.render_in_terms_of(&gl, node_index, &center, &up, yaw, pitch);
                 }
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
             }
@@ -191,24 +191,31 @@ impl SceneGraph {
         node_index: usize,
         center: &glm::Vec3,
         up: &glm::Vec3,
+        yaw: f32,
+        pitch: f32,
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 2.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 1000.0);
         let camera_position: glm::Vec3 =
-            glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
-        let mut mat = glm::identity();
-        mat = glm::rotation(node.total_rotation.z, &glm::vec3(0.0, 0.0, 1.0)) * mat;
-        mat = glm::rotation(node.total_rotation.y, &glm::vec3(0.0, 1.0, 0.0)) * mat;
-        mat = glm::rotation(node.total_rotation.x, &glm::vec3(1.0, 0.0, 0.0)) * mat;
-        let camera_transform = perspective
-            * glm::look_at(
-                &camera_position,
-                &(camera_position + glm::mat4_to_mat3(&mat) * center),
-                &(glm::mat4_to_mat3(&mat) * up),
-            );
+            glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
+        let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix)));
+        let rot: glm::Mat3 = glm::mat4_to_mat3(
+            &(glm::rotation(yaw, &glm::vec3(1.0, 0.0, 0.0))
+                * glm::rotation(pitch, &glm::vec3(0.0, 1.0, 0.0))),
+        );
 
-        self.render(gl, self.root, &camera_transform, &camera_position, false);
+        //println!("{}", mat);
+        //println!("{} {} {}", camera_position, mat * up, mat * center);
+        let camera_transform = perspective * glm::look_at(&glm::zero(), &(rot * center), &up);
+        //let camera_transform = perspective
+        //* glm::look_at(
+        //    &camera_position,
+        //    &(camera_position + glm::normalize(&(mat * center))),
+        //    &glm::normalize(&(mat * up)),
+        //);
+
+        self.render(gl, self.root, &camera_transform, &glm::zero(), false);
     }
 
     pub unsafe fn render(

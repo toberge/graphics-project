@@ -132,8 +132,8 @@ fn main() {
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if MOUSE_LOOK {
                 if let Ok(mut delta) = mouse_delta.lock() {
-                    cam.yaw += delta.0 * LOOK_SPEED;
-                    cam.pitch += delta.1 * LOOK_SPEED;
+                    //cam.yaw += delta.0 * LOOK_SPEED;
+                    //cam.pitch += delta.1 * LOOK_SPEED;
                     yaw += delta.0 * LOOK_SPEED;
                     pitch += delta.1 * LOOK_SPEED;
                     *delta = (0.0, 0.0);
@@ -146,7 +146,8 @@ fn main() {
                 // Render content
                 scene_graph.render_screens(&gl, time);
                 // Render reflections
-                scene_graph.render_reflections(&gl);
+                println!("{} {}", yaw, pitch);
+                scene_graph.render_reflections(&gl, yaw, pitch);
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
