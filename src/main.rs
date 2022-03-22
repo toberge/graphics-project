@@ -37,12 +37,10 @@ pub fn debug_callback(source: u32, e_type: u32, id: u32, severity: u32, error_me
             glow::DEBUG_SEVERITY_LOW => "low",
             _ => "unknown",
         };
-        unsafe {
-            panic!(
-                "{}: Error of severity {} raised from {}: {}\n",
-                id, severity_string, source, error_message
-            );
-        }
+        panic!(
+            "{}: Error of severity {} raised from {}: {}\n",
+            id, severity_string, source, error_message
+        );
     }
 }
 
@@ -55,7 +53,9 @@ fn main() {
         .with_title("Gloom-rs")
         .with_resizable(false)
         .with_inner_size(glutin::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT));
-    let cb = glutin::ContextBuilder::new().with_vsync(true);
+    let cb = glutin::ContextBuilder::new()
+        .with_vsync(true)
+        .with_multisampling(4);
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
     // Use mouse controls with invisible mouse confined to the screen.
     if MOUSE_LOOK {
@@ -91,7 +91,7 @@ fn main() {
             gl.enable(glow::DEPTH_TEST);
             gl.depth_func(glow::LESS);
             gl.enable(glow::CULL_FACE);
-            gl.disable(glow::MULTISAMPLE);
+            gl.enable(glow::MULTISAMPLE);
             gl.enable(glow::BLEND);
             gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
             gl.enable(glow::DEBUG_OUTPUT_SYNCHRONOUS);
