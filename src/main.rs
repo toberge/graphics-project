@@ -10,7 +10,7 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::ControlFlow;
-use scene::camera::Camera;
+use scene::camera::{Camera, RevolvingCamera};
 use scene::setup::create_scene;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -20,6 +20,7 @@ const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
+const FREE_LOOK: bool = false;
 
 // Debug callback to panic upon enountering any OpenGL error
 // from gloom-rs :)))))
@@ -58,7 +59,7 @@ fn main() {
         .with_multisampling(4);
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
     // Use mouse controls with invisible mouse confined to the screen.
-    if MOUSE_LOOK {
+    if MOUSE_LOOK && FREE_LOOK {
         windowed_context
             .window()
             .set_cursor_grab(true)
@@ -118,6 +119,9 @@ fn main() {
         let mut pitch = 0.;
         let mut yaw = 0.;
 
+        let rotcam =
+            RevolvingCamera::new(glm::vec3(0., 2., 0.), 15., 7., WINDOW_WIDTH, WINDOW_HEIGHT);
+
         loop {
             // Time delta code from gloom-rs
             let now = std::time::Instant::now();
@@ -154,13 +158,23 @@ fn main() {
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
-                scene_graph.render(
-                    &gl,
-                    0,
-                    &cam.create_transformation(),
-                    &glm::vec3(cam.x, cam.y, cam.z),
-                    true,
-                );
+                if FREE_LOOK {
+                    scene_graph.render(
+                        &gl,
+                        0,
+                        &cam.create_transformation(),
+                        &glm::vec3(cam.x, cam.y, cam.z),
+                        true,
+                    );
+                } else {
+                    scene_graph.render(
+                        &gl,
+                        0,
+                        &rotcam.create_transformation(time),
+                        &rotcam.get_position(time),
+                        true,
+                    );
+                }
                 // eh
                 context.swap_buffers().unwrap();
             }

@@ -15,6 +15,54 @@ pub struct Camera {
     perspective: glm::Mat4, // Cached version of the unchanging perspective matrix
 }
 
+pub struct RevolvingCamera {
+    pub origin: glm::Vec3,
+    pub radius: f32,
+    pub height: f32,
+    perspective: glm::Mat4, // Cached version of the unchanging perspective matrix
+}
+
+impl RevolvingCamera {
+    pub fn new(
+        origin: glm::Vec3,
+        radius: f32,
+        height: f32,
+        screen_width: u32,
+        screen_height: u32,
+    ) -> RevolvingCamera {
+        RevolvingCamera {
+            origin,
+            radius,
+            height,
+            perspective: glm::perspective(
+                screen_width as f32 / screen_height as f32,
+                PI / 3.,
+                0.5,
+                1000.0,
+            ),
+        }
+    }
+
+    pub fn get_position(&self, time: f32) -> glm::Vec3 {
+        glm::vec3(
+            self.radius * time.cos(),
+            self.height,
+            self.radius * time.sin(),
+        )
+    }
+
+    /// Assemble the global transformation matrix
+    pub fn create_transformation(&self, time: f32) -> glm::Mat4 {
+        let ground = glm::vec3(self.radius * time.cos(), 0., self.radius * time.sin());
+        let eye = glm::vec3(ground.x, self.height, ground.z);
+        let up = glm::cross(
+            &(self.origin - eye),
+            &glm::cross(&(self.origin - eye), &(ground - eye)),
+        );
+        self.perspective * glm::look_at(&eye, &self.origin, &up)
+    }
+}
+
 impl Camera {
     pub fn new(screen_width: u32, screen_height: u32) -> Camera {
         Camera {
@@ -25,7 +73,7 @@ impl Camera {
             pitch: 0.0,
             perspective: glm::perspective(
                 screen_width as f32 / screen_height as f32,
-                PI / 2.,
+                PI / 3.,
                 0.5,
                 1000.0,
             ),
