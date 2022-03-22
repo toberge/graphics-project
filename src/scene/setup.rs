@@ -77,13 +77,19 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let single_color_shader = unsafe {
         shader::Shader::new(
             &gl,
-            "res/shaders/single_color.vert",
+            "res/shaders/screen.vert",
             "res/shaders/single_color.frag",
         )
     };
     let single_color_texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
     scene_graph.screen_shaders = vec![(single_color_shader.program, single_color_texture)];
-    (*scene_graph.get_node(crts[0])).texture = Some(single_color_texture);
+    (*scene_graph.get_node(crts[2])).texture = Some(single_color_texture);
+
+    let smooth_shader =
+        unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", "res/shaders/smooth.frag") };
+    let smooth_texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
+    scene_graph.screen_shaders = vec![(smooth_shader.program, smooth_texture)];
+    (*scene_graph.get_node(crts[0])).texture = Some(smooth_texture);
 
     ///////// Miscellaneous interior /////////
 

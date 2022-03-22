@@ -3,7 +3,7 @@ precision mediump float;
 
 #define FRESNEL_BIAS 0.01
 #define FRESNEL_POWER 2.
-#define FRESNEL_SCALE 0.05
+#define FRESNEL_SCALE 0.02
 // #define FRESNEL_SCALE 0.05 seems better
 
 #define MAX_LIGHT_SOURCES 32
