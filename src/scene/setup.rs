@@ -79,6 +79,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         (2, "res/shaders/single_color.frag"),
         (0, "res/shaders/smooth.frag"),
         (3, "res/shaders/smooth2.frag"),
+        (4, "res/shaders/bloom.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
         let texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
