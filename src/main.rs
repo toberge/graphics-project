@@ -12,16 +12,13 @@ use glutin::event::{
 use glutin::event_loop::ControlFlow;
 use scene::camera::Camera;
 use scene::setup::create_scene;
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
-use std::{
-    f32::consts::PI,
-    sync::{Arc, Mutex, RwLock},
-};
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
-const MOVE_SPEED: f32 = 60.0;
+const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
 
 // Debug callback to panic upon enountering any OpenGL error

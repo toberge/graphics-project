@@ -26,7 +26,7 @@ impl Camera {
             perspective: glm::perspective(
                 screen_width as f32 / screen_height as f32,
                 PI / 2.,
-                1.0,
+                0.5,
                 1000.0,
             ),
         }

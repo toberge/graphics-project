@@ -5,6 +5,8 @@ precision mediump float;
 #define FRESNEL_POWER 2.
 #define FRESNEL_SCALE 0.50
 
+#define EMMISSIVE_FACTOR 0.3
+
 #define MAX_LIGHT_SOURCES 32
 
 struct LightSource {
@@ -74,6 +76,11 @@ void main() {
         float specular_factor = S * L * pow(max(0, dot(reflection, cam_dir)), shininess);
         lighting += diffuse_factor * diffuse_reflection * light_color + specular_factor * specular_reflection * light_color;
 
+    }
+
+    if (use_reflection == 1 && use_texture == 1) {
+        // This is noe of the CRT screens, boost the light from its contents
+        lighting += diffuse_reflection * EMMISSIVE_FACTOR;
     }
 
     if (use_reflection == 1) {

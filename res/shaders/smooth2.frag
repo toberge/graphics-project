@@ -1,15 +1,15 @@
 #version 450
 
-// Smoothed bulbs
+// Using a faulty normal function for visual effect
 
 // Raymarching parameters
 #define MAX_STEPS 50
-#define NEAR_ENOUGH 0.1
+#define NEAR_ENOUGH 0.01
 #define TOO_FAR 10.0
 
 // Lighting parameters
 #define DIFFUSE_FACTOR 0.6
-#define SPECULAR_FACTOR .9
+#define SPECULAR_FACTOR 1.9
 #define SHININESS 16.
 
 #define BACKGROUND_COLOR vec3(0., 0., 0.)
@@ -32,12 +32,9 @@ float smooth_min(float a, float b, float k) {
 }
 
 float distance_from_everything(vec3 point) {
-    float d = sphere(point, vec3(sin(time), 0, 0), .8);
-    d = smooth_min(d, sphere(point, vec3(cos(time), .8, -.5), .6), SMOOTH_FACTOR);
-    d = smooth_min(d, sphere(point, vec3(sin(1.1*time+.5), -.8, -.3), .6), SMOOTH_FACTOR);
-    d = smooth_min(d, sphere(point, vec3(1.2, 0, 0), 1.), SMOOTH_FACTOR);
-    d = smooth_min(d, sphere(point, vec3(-1.2, 0, 0), 1.), SMOOTH_FACTOR);
-    d = smooth_min(d, sphere(point, vec3(0, 1, 0), 1.), SMOOTH_FACTOR);
+    float d = sphere(point, vec3(1.5*sin(time), 1.5*cos(time), 0), 1.2);
+    d = smooth_min(d, sphere(point, vec3(1.5*sin(.9*time+.5), 0, 1.5*cos(.9*time+.5)), .6), SMOOTH_FACTOR);
+    d = smooth_min(d, sphere(point, vec3(0, 0, 0), 1.), SMOOTH_FACTOR);
     return d;
 }
 
@@ -58,14 +55,14 @@ float ray_march(vec3 ray_origin, vec3 ray_direction) {
     return d;
 }
 
-// See https://www.iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
+// Slightly altered forward difference, creates interesting result
 vec3 estimate_normal(vec3 point) {
-    vec2 e = vec2(NEAR_ENOUGH, 0); // x smol, y none
-    // Find normal as tangent of distance function
-    return normalize(vec3(
-        distance_from_everything(point + e.xyy) - distance_from_everything(point - e.xyy),
-        distance_from_everything(point + e.yxy) - distance_from_everything(point - e.yxy),
-        distance_from_everything(point + e.yyx) - distance_from_everything(point - e.yyx)
+    vec2 e = vec2(NEAR_ENOUGH, 0);
+    float d = distance_from_everything(point + e.xyy);
+    return normalize(d - vec3(
+        distance_from_everything(point + e.xyy),
+        distance_from_everything(point + e.yxy),
+        distance_from_everything(point + e.yyx)
     ));
 }
 

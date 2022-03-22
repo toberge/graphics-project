@@ -50,13 +50,13 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let mut crts: Vec<usize> = vec![];
     for &(position, rotation) in vec![
         (glm::vec3(0., 0., 5.), glm::vec3(0., 0., 0.)),
-        (glm::vec3(0., 0., -5.), glm::vec3(0., PI, 0.)),
         (glm::vec3(4., 0., 4.), glm::vec3(0., PI / 4., 0.)),
-        (glm::vec3(-4., 0., 4.), glm::vec3(0., -PI / 4., 0.)),
-        (glm::vec3(-4., 0., -4.), glm::vec3(0., -3. * PI / 4., 0.)),
-        (glm::vec3(4., 0., -4.), glm::vec3(0., 3. * PI / 4., 0.)),
         (glm::vec3(5., 0., 0.), glm::vec3(0., PI / 2., 0.)),
+        (glm::vec3(4., 0., -4.), glm::vec3(0., 3. * PI / 4., 0.)),
+        (glm::vec3(0., 0., -5.), glm::vec3(0., PI, 0.)),
+        (glm::vec3(-4., 0., -4.), glm::vec3(0., -3. * PI / 4., 0.)),
         (glm::vec3(-5., 0., 0.), glm::vec3(0., -PI / 2., 0.)),
+        (glm::vec3(-4., 0., 4.), glm::vec3(0., -PI / 4., 0.)),
         (glm::vec3(0., 4., 0.), glm::vec3(0., 0., 0.)),
     ]
     .iter()
@@ -74,22 +74,18 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 
-    let single_color_shader = unsafe {
-        shader::Shader::new(
-            &gl,
-            "res/shaders/screen.vert",
-            "res/shaders/single_color.frag",
-        )
-    };
-    let single_color_texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
-    scene_graph.screen_shaders = vec![(single_color_shader.program, single_color_texture)];
-    (*scene_graph.get_node(crts[2])).texture = Some(single_color_texture);
-
-    let smooth_shader =
-        unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", "res/shaders/smooth.frag") };
-    let smooth_texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
-    scene_graph.screen_shaders = vec![(smooth_shader.program, smooth_texture)];
-    (*scene_graph.get_node(crts[0])).texture = Some(smooth_texture);
+    let mut shaders: Vec<(glow::NativeProgram, Texture)> = vec![];
+    for (crt_index, shader_source) in vec![
+        (2, "res/shaders/single_color.frag"),
+        (0, "res/shaders/smooth.frag"),
+        (3, "res/shaders/smooth2.frag"),
+    ] {
+        let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
+        let texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
+        (*scene_graph.get_node(crts[crt_index])).texture = Some(texture);
+        shaders.push((shader.program, texture));
+    }
+    scene_graph.screen_shaders = shaders;
 
     ///////// Miscellaneous interior /////////
 
