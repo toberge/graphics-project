@@ -112,19 +112,14 @@ impl SceneGraph {
         child_index
     }
 
-    pub fn get_node(&mut self, node_index: usize) -> &Node {
-        &self.nodes[node_index]
+    pub fn get_node(&mut self, node_index: usize) -> &mut Node {
+        &mut self.nodes[node_index]
     }
 
     pub fn update(&mut self, gl: &glow::Context) {
         self.update_transformations(self.root, &glm::identity(), &glm::zero());
 
         unsafe {
-            if let Some(whatever) =
-                gl.get_uniform_location(self.final_shader.unwrap(), "light_sources[1].position")
-            {
-                println!("{:?}", whatever);
-            }
             gl.use_program(self.final_shader);
             gl.uniform_1_u32(
                 gl.get_uniform_location(self.final_shader.unwrap(), "num_light_sources")
@@ -133,7 +128,6 @@ impl SceneGraph {
             );
             for (i, &light_index) in self.light_sources.clone().iter().enumerate() {
                 let light = &self.nodes[light_index];
-                println!("{}", light.position);
                 gl.uniform_3_f32_slice(
                     gl.get_uniform_location(
                         self.final_shader.unwrap(),

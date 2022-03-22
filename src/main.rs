@@ -12,8 +12,11 @@ use glutin::event::{
 use glutin::event_loop::ControlFlow;
 use scene::camera::Camera;
 use scene::setup::create_scene;
-use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::{
+    f32::consts::PI,
+    sync::{Arc, Mutex, RwLock},
+};
 
 const WINDOW_WIDTH: u32 = 1024;
 const WINDOW_HEIGHT: u32 = 769;
@@ -113,6 +116,8 @@ fn main() {
         let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         cam.z += 10.;
+        cam.y += 3.;
+
         let mut pitch = 0.;
         let mut yaw = 0.;
 
