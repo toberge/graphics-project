@@ -142,7 +142,7 @@ fn main() {
 
             unsafe {
                 // Update transformations
-                scene_graph.update_transformations(0, &glm::identity(), &glm::zero());
+                scene_graph.update(&gl);
                 // Render content
                 scene_graph.render_screens(&gl, time);
                 // Render reflections

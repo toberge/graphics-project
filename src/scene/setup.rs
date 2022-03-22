@@ -130,5 +130,16 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         //});
     }
 
+    for (position, color) in vec![
+        (glm::vec3(3., 0., 0.), glm::vec3(0.4, 0.4, 0.4)),
+        (glm::vec3(0., 2., 3.), glm::vec3(0.4, 0.4, 0.4)),
+        (glm::vec3(-3., 0., 3.), glm::vec3(0.6, 0.4, 0.4)),
+    ] {
+        let mut light_node = Node::new(NodeType::Light);
+        light_node.position = position.clone();
+        light_node.emission_color = color;
+        scene_graph.add_child(0, light_node);
+    }
+
     scene_graph
 }

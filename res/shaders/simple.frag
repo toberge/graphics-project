@@ -6,6 +6,13 @@ precision mediump float;
 #define FRESNEL_SCALE 0.05
 // #define FRESNEL_SCALE 0.05 seems better
 
+#define MAX_LIGHT_SOURCES 32
+
+struct LightSource {
+    vec3 position;
+    vec3 color;
+};
+
 in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 normal_in;
 in layout(location = 2) vec2 uv;
@@ -16,6 +23,9 @@ uniform int use_reflection;
 
 uniform float shininess;
 uniform vec3 camera_position;
+
+uniform uint num_light_sources;
+uniform LightSource light_sources[MAX_LIGHT_SOURCES];
 
 uniform layout(binding = 0) sampler2D sampler;
 uniform layout(binding = 1) sampler2D reflection_sampler;
@@ -38,9 +48,9 @@ void main() {
 
     vec3 lighting = vec3(0);
 
-    for (int i = 0; i < 1; i++) {
-        //vec3 light = lightSource.position;
-        vec3 light = vec3(3., 0., 0.);
+    for (int i = 0; i < num_light_sources; i++) {
+        vec3 light = light_sources[i].position;
+        vec3 lightColor = light_sources[i].color;
         float S = 1;
 
         // Attenuation (reduces reach of lightsource)
@@ -54,7 +64,6 @@ void main() {
         // Phong model
         // Parameters – note that specular reflection is independent of surface color!
         vec3 specular_reflection = vec3(1.0, 1.0, 1.0);
-        vec3 lightColor = vec3(0.4, 0.4, 0.4);
         // Vectors
         vec3 lightDir = normalize(light - position);
         vec3 reflection = reflect(-lightDir, normal);
