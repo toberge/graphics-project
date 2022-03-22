@@ -3,7 +3,7 @@ precision mediump float;
 
 #define FRESNEL_BIAS 0.01
 #define FRESNEL_POWER 2.
-#define FRESNEL_SCALE 0.2
+#define FRESNEL_SCALE 0.05
 // #define FRESNEL_SCALE 0.05 seems better
 
 in layout(location = 0) vec3 position;
@@ -18,7 +18,7 @@ uniform float shininess;
 uniform vec3 camera_position;
 
 uniform layout(binding = 0) sampler2D sampler;
-uniform layout(binding = 1) samplerCube reflection_sampler;
+uniform layout(binding = 1) sampler2D reflection_sampler;
 
 out vec4 color;
 
@@ -30,7 +30,8 @@ void main() {
     if (use_texture == 1) {
         diffuse_reflection = texture(sampler, uv).rgb;
     } else if (use_reflection == 1) {
-        diffuse_reflection = texture(reflection_sampler, reflect(-camDir, normal)).rgb;
+        //diffuse_reflection = texture(reflection_sampler, reflect(-camDir, normal)).rgb;
+        diffuse_reflection = texture(reflection_sampler, uv).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
     }

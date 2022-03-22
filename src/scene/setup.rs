@@ -36,12 +36,12 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     // TODO the order of these matters for what is rendered :)))
     let crt_texture4 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
-    let crt_texture3 = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
-    let crt_texture2 = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
-    let crt_texture = unsafe { Texture::cubemap_texture(&gl, 400, 400) };
+    let crt_texture3 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture2 = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
+    let crt_texture = unsafe { Texture::framebuffer_texture(&gl, 400, 400) };
     let mut crt_node = Node::new(NodeType::Geometry);
     crt_node.vao = Some(crt_vao);
-    crt_node.scale = glm::vec3(4.5, 4.5, 4.5);
+    crt_node.scale = glm::vec3(2., 2., 2.);
     crt_node.position.z = 2.5;
     let mut screen_node = Node::new(NodeType::Screen);
     screen_node.vao = Some(screen_vao);

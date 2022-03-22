@@ -24,7 +24,8 @@ pub struct Node {
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<Texture>,
-    pub reflection_texture: Option<CubemapTexture>,
+    pub reflection_texture: Option<Texture>,
+    pub cubemap_texture: Option<CubemapTexture>,
     pub shader: Option<NativeShader>,
     pub emission_color: glm::Vec3,
 
@@ -66,6 +67,7 @@ impl Node {
             vao: None,
             texture: None,
             reflection_texture: None,
+            cubemap_texture: None,
             shader: None,
             emission_color: glm::zero(),
             position: glm::zero(),
@@ -160,9 +162,39 @@ impl SceneGraph {
         }
     }
 
-    pub unsafe fn render_reflections(&self, gl: &glow::Context, yaw: f32, pitch: f32) {
+    pub unsafe fn render_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
-            if let Some(texture) = self.nodes[node_index].reflection_texture {
+            let texture = self.nodes[node_index].reflection_texture.expect(&format!(
+                "Node {} was not assigned reflection texture",
+                node_index
+            ));
+            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+            gl.use_program(self.final_shader);
+            self.render_in_terms_of(&gl, node_index);
+            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+        }
+    }
+
+    /// Render scene tree from the persepective of one particular node
+    pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
+        let node = &self.nodes[node_index];
+
+        let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
+        let camera_position: glm::Vec3 =
+            glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
+        // Specific rotations expefimented forth
+        let pitch_rotation: glm::Mat4 = glm::rotation(-0.12, &glm::vec3(1.0, 0.0, 0.0));
+        let yaw_rotation: glm::Mat4 = glm::rotation(-PI + 0.14, &glm::vec3(0.0, 1.0, 0.0));
+        let camera_transform =
+            perspective * pitch_rotation * yaw_rotation * glm::inverse(&node.model_matrix);
+
+        self.render(gl, self.root, &camera_transform, &camera_position, false);
+    }
+
+    pub unsafe fn render_cubemap_reflections(&self, gl: &glow::Context) {
+        for node_index in self.cameras.clone() {
+            if let Some(texture) = self.nodes[node_index].cubemap_texture {
                 gl.use_program(self.final_shader);
                 for (i, &(center, up)) in [
                     (glm::vec3(1., 0., 0.), glm::vec3(0., 1., 0.)),  // +X
@@ -177,7 +209,7 @@ impl SceneGraph {
                 {
                     gl.bind_framebuffer(glow::FRAMEBUFFER, Some(texture.framebuffers[i]));
                     gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-                    self.render_in_terms_of(&gl, node_index, &center, &up, yaw, pitch);
+                    self.render_in_terms_of_with_lookat(&gl, node_index, &center, &up);
                 }
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
             }
@@ -185,14 +217,12 @@ impl SceneGraph {
     }
 
     /// Render scene tree from the persepective of one particular node
-    pub unsafe fn render_in_terms_of(
+    pub unsafe fn render_in_terms_of_with_lookat(
         &self,
         gl: &glow::Context,
         node_index: usize,
         center: &glm::Vec3,
         up: &glm::Vec3,
-        yaw: f32,
-        pitch: f32,
     ) {
         let node = &self.nodes[node_index];
 
@@ -200,20 +230,13 @@ impl SceneGraph {
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
         let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix)));
-        let rot: glm::Mat3 = glm::mat4_to_mat3(
-            &(glm::rotation(yaw, &glm::vec3(1.0, 0.0, 0.0))
-                * glm::rotation(pitch, &glm::vec3(0.0, 1.0, 0.0))),
-        );
 
-        //println!("{}", mat);
-        //println!("{} {} {}", camera_position, mat * up, mat * center);
-        let camera_transform = perspective * glm::look_at(&glm::zero(), &(rot * center), &up);
-        //let camera_transform = perspective
-        //* glm::look_at(
-        //    &camera_position,
-        //    &(camera_position + glm::normalize(&(mat * center))),
-        //    &glm::normalize(&(mat * up)),
-        //);
+        let camera_transform = perspective
+            * glm::look_at(
+                &camera_position,
+                &(camera_position + glm::normalize(&(mat * center))),
+                &glm::normalize(&(mat * up)),
+            );
 
         self.render(gl, self.root, &camera_transform, &glm::zero(), false);
     }
@@ -285,7 +308,7 @@ impl SceneGraph {
                         1,
                     );
                     gl.active_texture(glow::TEXTURE1);
-                    gl.bind_texture(glow::TEXTURE_CUBE_MAP, Some(reflection.texture));
+                    gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
