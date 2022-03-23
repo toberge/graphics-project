@@ -75,10 +75,11 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     let mut shaders: Vec<(glow::NativeProgram, FrameBufferTexture)> = vec![];
     for (crt_index, shader_source) in vec![
-        (2, "res/shaders/single_color.frag"),
+        (3, "res/shaders/single_color.frag"),
         (0, "res/shaders/smooth.frag"),
-        (3, "res/shaders/smooth2.frag"),
-        (4, "res/shaders/bloom.frag"),
+        (1, "res/shaders/bloom.frag"),
+        (2, "res/shaders/smooth2.frag"),
+        (4, "res/shaders/gyroid.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
         let texture = unsafe { FrameBufferTexture::new(&gl, 200, 200) };
