@@ -4,7 +4,7 @@ use glm;
 use glow::*;
 
 use super::{
-    texture::{CubemapTexture, Texture},
+    texture::{CubemapTexture, FrameBufferTexture},
     vao::VAO,
 };
 
@@ -23,8 +23,8 @@ pub struct Node {
 
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
-    pub texture: Option<Texture>,
-    pub reflection_texture: Option<Texture>,
+    pub texture: Option<FrameBufferTexture>,
+    pub reflection_texture: Option<FrameBufferTexture>,
     pub cubemap_texture: Option<CubemapTexture>,
     pub shader: Option<NativeShader>,
     pub emission_color: glm::Vec3,
@@ -54,7 +54,7 @@ pub struct SceneGraph {
     // Scene graph needs access to shaders during rendering
     pub final_shader: Option<NativeProgram>,
     pub reflection_shader: Option<NativeProgram>,
-    pub screen_shaders: Vec<(NativeProgram, Texture)>,
+    pub screen_shaders: Vec<(NativeProgram, FrameBufferTexture)>,
 }
 
 impl Node {
@@ -189,6 +189,10 @@ impl SceneGraph {
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             gl.use_program(Some(shader));
             gl.uniform_1_f32(gl.get_uniform_location(shader, "time").as_ref(), time);
+            gl.uniform_2_f32_slice(
+                gl.get_uniform_location(shader, "screen_size").as_ref(),
+                glm::vec2(texture.width as f32, texture.height as f32).as_slice(),
+            );
             canvas.draw(&gl);
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }

@@ -1,19 +1,22 @@
 use glow::*;
 
 #[derive(Clone, Copy)]
-pub struct Texture {
+pub struct FrameBufferTexture {
     pub framebuffer: Option<NativeFramebuffer>,
     pub texture: NativeTexture,
+    pub width: i32,
+    pub height: i32,
 }
 
 #[derive(Clone, Copy)]
 pub struct CubemapTexture {
     pub framebuffers: [NativeFramebuffer; 6],
     pub texture: NativeTexture,
+    pub size: i32,
 }
 
-impl Texture {
-    pub unsafe fn framebuffer_texture(gl: &glow::Context, width: i32, height: i32) -> Texture {
+impl FrameBufferTexture {
+    pub unsafe fn new(gl: &glow::Context, width: i32, height: i32) -> FrameBufferTexture {
         let framebuffer = gl
             .create_framebuffer()
             .expect("Could not create framebuffer");
@@ -55,13 +58,17 @@ impl Texture {
 
         gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
-        Texture {
+        FrameBufferTexture {
             framebuffer: Some(framebuffer),
             texture,
+            width,
+            height,
         }
     }
+}
 
-    pub unsafe fn cubemap_texture(gl: &glow::Context, width: i32, height: i32) -> CubemapTexture {
+impl CubemapTexture {
+    pub unsafe fn new(gl: &glow::Context, size: i32) -> CubemapTexture {
         let mut framebuffers = [None, None, None, None, None, None];
         // Create texture
         let texture = gl.create_texture().expect("Could not create texture");
@@ -90,8 +97,8 @@ impl Texture {
                 glow::TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
                 0,
                 glow::RGBA as i32,
-                width,
-                height,
+                size,
+                size,
                 0,
                 glow::RGBA,
                 glow::UNSIGNED_BYTE,
@@ -131,6 +138,7 @@ impl Texture {
                 framebuffers[5].unwrap(),
             ],
             texture,
+            size,
         }
     }
 }

@@ -18,6 +18,7 @@
 in layout(location = 0) vec3 position;
 
 uniform float time;
+uniform vec2 screen_size;
 
 out vec4 color;
 
@@ -86,9 +87,8 @@ vec3 lighting(vec3 point, vec3 camera, vec3 camDir, float dist) {
 }
 
 void main() {
-    // TODO Add uniform with texture size...
     // Transform into range [0, 1]
-    vec2 uv = vec2(gl_FragCoord.x / 200., gl_FragCoord.y / 200.);
+    vec2 uv = gl_FragCoord.xy / screen_size;
     // Then into range [-1, 1]
     vec2 xy = (uv - .5) * 2.;
 

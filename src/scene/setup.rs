@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use crate::shader;
 
 use super::graph::{Node, NodeType, SceneGraph};
-use super::texture::Texture;
+use super::texture::FrameBufferTexture;
 use super::vao::{load_obj, VAO};
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
@@ -69,12 +69,11 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let crt_index = scene_graph.add_child(crt_root, crt_node);
         let mut screen_node = Node::new(NodeType::Screen);
         screen_node.vao = Some(screen_vao);
-        screen_node.reflection_texture =
-            unsafe { Some(Texture::framebuffer_texture(&gl, 200, 200)) };
+        screen_node.reflection_texture = unsafe { Some(FrameBufferTexture::new(&gl, 200, 200)) };
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 
-    let mut shaders: Vec<(glow::NativeProgram, Texture)> = vec![];
+    let mut shaders: Vec<(glow::NativeProgram, FrameBufferTexture)> = vec![];
     for (crt_index, shader_source) in vec![
         (2, "res/shaders/single_color.frag"),
         (0, "res/shaders/smooth.frag"),
@@ -82,7 +81,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         (4, "res/shaders/bloom.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
-        let texture = unsafe { Texture::framebuffer_texture(&gl, 200, 200) };
+        let texture = unsafe { FrameBufferTexture::new(&gl, 200, 200) };
         (*scene_graph.get_node(crts[crt_index])).texture = Some(texture);
         shaders.push((shader.program, texture));
     }
