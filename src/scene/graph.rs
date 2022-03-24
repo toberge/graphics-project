@@ -25,7 +25,9 @@ pub struct Node {
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<FrameBufferTexture>,
     pub normal_map: Option<FrameBufferTexture>,
-    pub reflection_texture: Option<FrameBufferTexture>,
+    pub reflection_map: Option<FrameBufferTexture>,
+    pub roughness_map: Option<FrameBufferTexture>,
+    pub opacity_map: Option<FrameBufferTexture>,
     pub cubemap_texture: Option<CubemapTexture>,
     pub shader: Option<NativeShader>,
     pub emission_color: glm::Vec3,
@@ -68,7 +70,9 @@ impl Node {
             vao: None,
             texture: None,
             normal_map: None,
-            reflection_texture: None,
+            roughness_map: None,
+            opacity_map: None,
+            reflection_map: None,
             cubemap_texture: None,
             shader: None,
             emission_color: glm::zero(),
@@ -202,7 +206,7 @@ impl SceneGraph {
 
     pub unsafe fn render_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
-            let texture = self.nodes[node_index].reflection_texture.expect(&format!(
+            let texture = self.nodes[node_index].reflection_map.expect(&format!(
                 "Node {} was not assigned reflection texture",
                 node_index
             ));
@@ -354,9 +358,43 @@ impl SceneGraph {
                 );
             }
 
-            // Do the same for reflection texture
+            // Roughness map
+            if let Some(texture) = node.roughness_map {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_roughness")
+                        .as_ref(),
+                    1,
+                );
+                gl.active_texture(glow::TEXTURE3);
+                gl.bind_texture(glow::TEXTURE_2D, Some(texture.texture));
+            } else {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_roughness")
+                        .as_ref(),
+                    0,
+                );
+            }
+
+            // Opacity map
+            if let Some(texture) = node.opacity_map {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_opacity")
+                        .as_ref(),
+                    1,
+                );
+                gl.active_texture(glow::TEXTURE4);
+                gl.bind_texture(glow::TEXTURE_2D, Some(texture.texture));
+            } else {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_opacity")
+                        .as_ref(),
+                    0,
+                );
+            }
+
+            // Reflection texture
             if with_reflection {
-                if let Some(reflection) = node.reflection_texture {
+                if let Some(reflection) = node.reflection_map {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                             .as_ref(),
