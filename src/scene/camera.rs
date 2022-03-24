@@ -8,7 +8,14 @@ const FAR: f32 = 100.;
 // Copy-paste from assignments before Christmas
 // Not intended for final use, should be useful for testing
 
-pub struct Camera {
+pub trait Camera {
+    fn get_position(&self, time: f32) -> glm::Vec3;
+    fn create_transformation(&self, time: f32) -> glm::Mat4;
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta_time: f32);
+    fn handle_mouse(&mut self, delta_xy: (f32, f32));
+}
+
+pub struct FirstPersonCamera {
     pub x: f32, // Position in world coordinates
     pub y: f32,
     pub z: f32,
@@ -44,8 +51,10 @@ impl RevolvingCamera {
             ),
         }
     }
+}
 
-    pub fn get_position(&self, time: f32) -> glm::Vec3 {
+impl Camera for RevolvingCamera {
+    fn get_position(&self, time: f32) -> glm::Vec3 {
         glm::vec3(
             self.radius * time.cos(),
             self.height,
@@ -54,7 +63,7 @@ impl RevolvingCamera {
     }
 
     /// Assemble the global transformation matrix
-    pub fn create_transformation(&self, time: f32) -> glm::Mat4 {
+    fn create_transformation(&self, time: f32) -> glm::Mat4 {
         let ground = glm::vec3(self.radius * time.cos(), 0., self.radius * time.sin());
         let eye = glm::vec3(ground.x, self.height, ground.z);
         let up = glm::cross(
@@ -63,11 +72,14 @@ impl RevolvingCamera {
         );
         self.perspective * glm::look_at(&eye, &self.origin, &up)
     }
+
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta_time: f32) {}
+    fn handle_mouse(&mut self, delta_xy: (f32, f32)) {}
 }
 
-impl Camera {
-    pub fn new(screen_width: u32, screen_height: u32) -> Camera {
-        Camera {
+impl FirstPersonCamera {
+    pub fn new(screen_width: u32, screen_height: u32) -> FirstPersonCamera {
+        FirstPersonCamera {
             x: 0.0,
             y: 0.0,
             z: 0.0,
@@ -89,9 +101,15 @@ impl Camera {
         let yaw_rotation: glm::Mat4 = glm::rotation(self.yaw, &glm::vec3(0.0, 1.0, 0.0));
         pitch_rotation * yaw_rotation * glm::identity()
     }
+}
+
+impl Camera for FirstPersonCamera {
+    fn get_position(&self, time: f32) -> glm::Vec3 {
+        glm::vec3(self.x, self.y, self.z)
+    }
 
     /// Assemble the global transformation matrix
-    pub fn create_transformation(&self) -> glm::Mat4 {
+    fn create_transformation(&self, time: f32) -> glm::Mat4 {
         // Rotate along x according to pitch
         let pitch_rotation: glm::Mat4 = glm::rotation(self.pitch, &glm::vec3(1.0, 0.0, 0.0));
         // Rotate along y according to yaw
@@ -108,7 +126,7 @@ impl Camera {
                 * glm::identity()
     }
 
-    pub fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta: f32) {
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta: f32) {
         let rot = self.just_rotation();
         match keycode {
             VirtualKeyCode::A => {
@@ -158,5 +176,10 @@ impl Camera {
             //}
             _ => {}
         }
+    }
+
+    fn handle_mouse(&mut self, delta_xy: (f32, f32)) {
+        self.yaw += delta_xy.0;
+        self.pitch += delta_xy.1;
     }
 }

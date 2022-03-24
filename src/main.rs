@@ -11,10 +11,10 @@ use glutin::event::{
 };
 use glutin::event_loop::ControlFlow;
 use scene::setup::create_scene;
-use scene::vao::VAO;
 use scene::{
-    camera::{Camera, RevolvingCamera},
+    camera::{Camera, FirstPersonCamera, RevolvingCamera},
     texture,
+    vao::VAO,
 };
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -120,17 +120,16 @@ fn main() {
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
 
+        // Camera object that revolves around the center of the scene
+        let mut rotcam =
+            RevolvingCamera::new(glm::vec3(0., 2., 0.), 15., 7., WINDOW_WIDTH, WINDOW_HEIGHT);
         // Camera object that holds current position, yaw and pitch
-        let mut cam = Camera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        cam.z += 10.;
-        cam.y += 3.;
+        let mut fpcam = FirstPersonCamera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
+        fpcam.z += 10.;
+        fpcam.y += 3.;
 
         let mut pitch = 0.;
         let mut yaw = 0.;
-
-        let rotcam =
-            RevolvingCamera::new(glm::vec3(0., 2., 0.), 15., 7., WINDOW_WIDTH, WINDOW_HEIGHT);
 
         loop {
             // Time delta code from gloom-rs
@@ -142,14 +141,28 @@ fn main() {
             // Handle keyboard input
             if let Ok(keys) = pressed_keys.lock() {
                 for key in keys.iter() {
-                    cam.handle_keys(key, delta_time * MOVE_SPEED);
+                    match key {
+                        VirtualKeyCode::Space => {
+                            // = fpcam;
+                        }
+                        _ => {
+                            if FREE_LOOK {
+                                fpcam.handle_keys(key, delta_time * MOVE_SPEED);
+                            } else {
+                                rotcam.handle_keys(key, delta_time * MOVE_SPEED);
+                            }
+                        }
+                    }
                 }
             }
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if MOUSE_LOOK {
                 if let Ok(mut delta) = mouse_delta.lock() {
-                    cam.yaw += delta.0 * LOOK_SPEED;
-                    cam.pitch += delta.1 * LOOK_SPEED;
+                    if FREE_LOOK {
+                        fpcam.handle_mouse((delta.0 * LOOK_SPEED, delta.1 * LOOK_SPEED));
+                    } else {
+                        rotcam.handle_mouse((delta.0 * LOOK_SPEED, delta.1 * LOOK_SPEED));
+                    }
                     yaw += delta.0 * LOOK_SPEED;
                     pitch += delta.1 * LOOK_SPEED;
                     *delta = (0.0, 0.0);
@@ -171,15 +184,15 @@ fn main() {
                 if FREE_LOOK {
                     scene_graph.render(
                         &gl,
-                        0,
-                        &cam.create_transformation(),
-                        &glm::vec3(cam.x, cam.y, cam.z),
+                        scene_graph.root,
+                        &fpcam.create_transformation(time),
+                        &fpcam.get_position(time),
                         true,
                     );
                 } else {
                     scene_graph.render(
                         &gl,
-                        0,
+                        scene_graph.root,
                         &rotcam.create_transformation(time),
                         &rotcam.get_position(time),
                         true,
@@ -192,7 +205,12 @@ fn main() {
                 gl.uniform_3_f32_slice(
                     gl.get_uniform_location(post_shader.program, "camera_position")
                         .as_ref(),
-                    rotcam.get_position(time).as_ref(),
+                    (if FREE_LOOK {
+                        fpcam.get_position(time)
+                    } else {
+                        rotcam.get_position(time)
+                    })
+                    .as_ref(),
                 );
                 gl.active_texture(glow::TEXTURE0);
                 gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.color_buffer_texture));
