@@ -195,9 +195,15 @@ fn main() {
                     rotcam.get_position(time).as_ref(),
                 );
                 gl.active_texture(glow::TEXTURE0);
-                gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.color_buffer_texture));
+                gl.bind_texture(
+                    glow::TEXTURE_2D_MULTISAMPLE,
+                    Some(post_buffer.color_buffer_texture),
+                );
                 gl.active_texture(glow::TEXTURE1);
-                gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.depth_buffer_texture));
+                gl.bind_texture(
+                    glow::TEXTURE_2D_MULTISAMPLE,
+                    Some(post_buffer.depth_buffer_texture),
+                );
                 canvas.draw(&gl);
                 // Swap which color buffer is displayed
                 context.swap_buffers().unwrap();

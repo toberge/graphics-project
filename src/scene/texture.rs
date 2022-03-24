@@ -162,17 +162,14 @@ impl PostProcessingTexture {
 
         // Color texture
         let color_buffer_texture = gl.create_texture().expect("Could not create texture");
-        gl.bind_texture(glow::TEXTURE_2D, Some(color_buffer_texture));
-        gl.tex_image_2d(
-            glow::TEXTURE_2D,
-            0,
+        gl.bind_texture(glow::TEXTURE_2D_MULTISAMPLE, Some(color_buffer_texture));
+        gl.tex_image_2d_multisample(
+            glow::TEXTURE_2D_MULTISAMPLE,
+            4,
             glow::RGBA as i32,
             width,
             height,
-            0,
-            glow::RGBA,
-            glow::UNSIGNED_BYTE,
-            None,
+            false,
         );
         // Specify mipmap interpolation
         gl.tex_parameter_i32(
@@ -198,17 +195,14 @@ impl PostProcessingTexture {
 
         // Depth texture
         let depth_buffer_texture = gl.create_texture().expect("Could not create texture");
-        gl.bind_texture(glow::TEXTURE_2D, Some(depth_buffer_texture));
-        gl.tex_image_2d(
-            glow::TEXTURE_2D,
-            0,
+        gl.bind_texture(glow::TEXTURE_2D_MULTISAMPLE, Some(depth_buffer_texture));
+        gl.tex_image_2d_multisample(
+            glow::TEXTURE_2D_MULTISAMPLE,
+            4,
             glow::DEPTH_COMPONENT24 as i32,
             width,
             height,
-            0,
-            glow::DEPTH_COMPONENT,
-            glow::FLOAT,
-            None,
+            false,
         );
         //// Specify mipmap interpolation
         gl.tex_parameter_i32(
@@ -242,7 +236,10 @@ impl PostProcessingTexture {
         );
 
         if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-            panic!("Framebuffer creation failed!");
+            panic!(
+                "Framebuffer creation failed! {:x}",
+                gl.check_framebuffer_status(glow::FRAMEBUFFER)
+            );
         }
 
         gl.bind_framebuffer(glow::FRAMEBUFFER, None);
