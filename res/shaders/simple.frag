@@ -18,9 +18,11 @@ in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 normal_in;
 in layout(location = 2) vec2 uv;
 in layout(location = 3) vec4 color_in;
+in layout(location = 4) mat3 TBN;
 
 uniform int use_texture;
 uniform int use_reflection;
+uniform int use_normals;
 
 uniform float shininess;
 uniform vec3 camera_position;
@@ -30,20 +32,26 @@ uniform LightSource light_sources[MAX_LIGHT_SOURCES];
 
 uniform layout(binding = 0) sampler2D sampler;
 uniform layout(binding = 1) sampler2D reflection_sampler;
+uniform layout(binding = 2) sampler2D normal_sampler;
 
 out vec4 color;
 
 void main() {
-    vec3 normal = normalize(normal_in);
     vec3 cam_dir = normalize(camera_position - position);
 
     vec3 diffuse_reflection;
-    vec3 reflection = vec3(0);
     if (use_texture == 1) {
         diffuse_reflection = texture(sampler, uv).rgb;
     } else {
         diffuse_reflection = color_in.rgb;
     }
+
+    vec3 normal = normalize(normal_in);
+    if (use_normals == 1) {
+        normal = normalize(TBN * (2*vec3(texture(normal_sampler, uv)) - 1));
+    }
+
+    vec3 reflection = vec3(0);
     if (use_reflection == 1) {
         //diffuse_reflection = texture(reflection_sampler, reflect(-cam_dir, normal)).rgb;
         reflection = texture(reflection_sampler, uv).rgb;
@@ -84,7 +92,6 @@ void main() {
     }
 
     if (use_reflection == 1) {
-
         float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
         color = vec4(mix(lighting, reflection, fresnel_factor), 1.);
     } else {

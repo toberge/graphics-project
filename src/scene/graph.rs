@@ -24,6 +24,7 @@ pub struct Node {
     kind: NodeType,
     pub vao: Option<VAO>, // TODO problem when deleting VAO I guess :))))
     pub texture: Option<FrameBufferTexture>,
+    pub normal_map: Option<FrameBufferTexture>,
     pub reflection_texture: Option<FrameBufferTexture>,
     pub cubemap_texture: Option<CubemapTexture>,
     pub shader: Option<NativeShader>,
@@ -66,6 +67,7 @@ impl Node {
             kind,
             vao: None,
             texture: None,
+            normal_map: None,
             reflection_texture: None,
             cubemap_texture: None,
             shader: None,
@@ -330,6 +332,23 @@ impl SceneGraph {
             } else {
                 gl.uniform_1_i32(
                     gl.get_uniform_location(self.final_shader.unwrap(), "use_texture")
+                        .as_ref(),
+                    0,
+                );
+            }
+
+            // Normal map
+            if let Some(texture) = node.normal_map {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_normals")
+                        .as_ref(),
+                    1,
+                );
+                gl.active_texture(glow::TEXTURE2);
+                gl.bind_texture(glow::TEXTURE_2D, Some(texture.texture));
+            } else {
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(self.final_shader.unwrap(), "use_normals")
                         .as_ref(),
                     0,
                 );

@@ -7,6 +7,8 @@ pub struct VAO {
     pub vao: NativeVertexArray,
     vertex_buffer: NativeBuffer,
     normal_buffer: NativeBuffer,
+    tangent_buffer: NativeBuffer,
+    bitangent_buffer: NativeBuffer,
     uv_buffer: NativeBuffer,
     color_buffer: NativeBuffer,
     pub size: i32,
@@ -103,8 +105,67 @@ impl VAO {
         let vertex_buffer = create_buffer(&gl, 0, 3, vertices);
         let normal_buffer = create_buffer(&gl, 1, 3, normals);
         let uv_buffer = create_buffer(&gl, 2, 2, uvs);
-
         let color_buffer = create_buffer(&gl, 3, 4, color);
+
+        // Compute tangent and bitangent vectors
+        let mut tangents: Vec<glm::Vec3> = vec![];
+        let mut bitangents: Vec<glm::Vec3> = vec![];
+        for i in (0..indices.len()).step_by(3) {
+            // Same procedure as in the linked tutorial (for assignment 2)
+            let vertex0 = glm::vec3(
+                vertices[(indices[i] * 3) as usize],
+                vertices[(indices[i] * 3 + 1) as usize],
+                vertices[(indices[i] * 3 + 2) as usize],
+            );
+            let vertex1 = glm::vec3(
+                vertices[(indices[i + 1] * 3) as usize],
+                vertices[(indices[i + 1] * 3 + 1) as usize],
+                vertices[(indices[i + 1] * 3 + 2) as usize],
+            );
+            let vertex2 = glm::vec3(
+                vertices[(indices[i + 2] * 3) as usize],
+                vertices[(indices[i + 2] * 3 + 1) as usize],
+                vertices[(indices[i + 2] * 3 + 2) as usize],
+            );
+            let uv0 = glm::vec2(
+                uvs[(indices[i] * 2) as usize],
+                uvs[(indices[i] * 2 + 1) as usize],
+            );
+            let uv1 = glm::vec2(
+                uvs[(indices[i + 1] * 2) as usize],
+                uvs[(indices[i + 1] * 2 + 1) as usize],
+            );
+            let uv2 = glm::vec2(
+                uvs[(indices[i + 2] * 2) as usize],
+                uvs[(indices[i + 2] * 2 + 1) as usize],
+            );
+            let delta_pos_1 = vertex1 - vertex0;
+            let delta_pos_2 = vertex2 - vertex0;
+            let delta_uv_1 = uv1 - uv0;
+            let delta_uv_2 = uv2 - uv0;
+            let r = 1.0 / (delta_uv_1.x * delta_uv_2.y - delta_uv_1.y * delta_uv_2.x);
+            let tangent = (delta_pos_1 * delta_uv_2.y - delta_pos_2 * delta_uv_1.y) * r;
+            let bitangent = (delta_pos_2 * delta_uv_1.x - delta_pos_1 * delta_uv_2.x) * r;
+            tangents.push(tangent);
+            tangents.push(tangent);
+            tangents.push(tangent);
+            bitangents.push(bitangent);
+            bitangents.push(bitangent);
+            bitangents.push(bitangent);
+        }
+        // Assign them as attributes
+        let tangent_buffer = create_buffer(
+            &gl,
+            4,
+            3,
+            &tangents.iter().flat_map(|&t| [t.x, t.y, t.z]).collect(),
+        );
+        let bitangent_buffer = create_buffer(
+            &gl,
+            5,
+            3,
+            &bitangents.iter().flat_map(|&t| [t.x, t.y, t.z]).collect(),
+        );
 
         let index_buffer = gl.create_buffer().expect("Unable to create index buffer");
         gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(index_buffer));
@@ -119,6 +180,8 @@ impl VAO {
             size: indices.len() as i32,
             vertex_buffer,
             normal_buffer,
+            tangent_buffer,
+            bitangent_buffer,
             uv_buffer,
             color_buffer,
             shininess,
@@ -166,6 +229,8 @@ impl VAO {
         gl.delete_vertex_array(self.vao);
         gl.delete_buffer(self.vertex_buffer);
         gl.delete_buffer(self.normal_buffer);
+        gl.delete_buffer(self.tangent_buffer);
+        gl.delete_buffer(self.bitangent_buffer);
         gl.delete_buffer(self.uv_buffer);
         gl.delete_buffer(self.color_buffer);
     }

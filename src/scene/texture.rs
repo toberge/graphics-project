@@ -15,6 +15,13 @@ pub struct ImageTexture {
 }
 
 #[derive(Clone, Copy)]
+pub struct PBRTextures {
+    pub texture: NativeTexture,
+    pub normals: NativeTexture,
+    pub roughness: NativeTexture,
+}
+
+#[derive(Clone, Copy)]
 pub struct CubemapTexture {
     pub framebuffers: [NativeFramebuffer; 6],
     pub texture: NativeTexture,
