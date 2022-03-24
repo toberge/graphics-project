@@ -1,0 +1,44 @@
+# Blender 3.1.0 MTL File: 'modern_ceiling_lamp_01_2k.blend'
+# www.blender.org
+
+newmtl modern_ceiling_globe
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.622958 0.541622 0.474550
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/modern_ceiling_lamp_01_diff_2k.jpg
+map_Ns  textures/modern_ceiling_lamp_01_rough_2k.jpg
+map_refl  textures/modern_ceiling_lamp_01_metal_2k.exr
+map_Bump  -bm 1.000000 textures/modern_ceiling_lamp_01_nor_gl_2k.exr
+
+newmtl modern_ceiling_lamp_01
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/modern_ceiling_lamp_01_diff_2k.jpg
+map_Ns  textures/modern_ceiling_lamp_01_rough_2k.jpg
+map_refl  textures/modern_ceiling_lamp_01_metal_2k.exr
+map_Bump  -bm 1.000000 textures/modern_ceiling_lamp_01_nor_gl_2k.exr
+
+newmtl modern_ceiling_lamp_01_glass
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.340000 0.340000 0.340000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/modern_ceiling_lamp_01_diff_2k.jpg
+map_Ns  textures/modern_ceiling_lamp_01_rough_2k.jpg
+map_refl  textures/modern_ceiling_lamp_01_metal_2k.exr
+map_Bump  -bm 1.000000 textures/modern_ceiling_lamp_01_nor_gl_2k.exr

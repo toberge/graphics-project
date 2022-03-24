@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use std::time::Instant;
 
 use crate::shader;
 
@@ -136,28 +137,76 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         scene_graph.add_child(0, chair_node);
     }
 
-    let sofa_texture = unsafe { ImageTexture::new(gl, "res/textures/sofa_03_diff_1k.jpg") };
-    let sofa_normals = unsafe { ImageTexture::new(gl, "res/textures/sofa_03_nor_gl_1k.jpg") };
-    let sofa_roughness = unsafe { ImageTexture::new(gl, "res/textures/sofa_03_rough_1k.jpg") };
-    let sofa_opacity = unsafe { ImageTexture::new(gl, "res/textures/sofa_03_opacity_1k.png") };
-    let (sofa_models, sofa_materials) = load_obj("res/models/sofa_03_1k.obj");
-    let sofa_vao = unsafe { VAO::from_mesh(&gl, &sofa_models[0], &sofa_materials) };
-    let mut sofa_node = Node::new(NodeType::Geometry);
-    sofa_node.vao = Some(sofa_vao);
-    sofa_node.position.z += 12.;
-    sofa_node.rotation.y = PI;
-    sofa_node.scale = glm::vec3(4., 4., 4.);
-    sofa_node.texture = Some(sofa_texture);
-    sofa_node.normal_map = Some(sofa_normals);
-    sofa_node.roughness_map = Some(sofa_roughness);
-    sofa_node.opacity_map = Some(sofa_opacity);
-    scene_graph.add_child(0, sofa_node);
+    let before = Instant::now();
+    for (objname, name, position, rotation, scale) in vec![
+        // +Z: Sofa
+        (
+            "sofa_03",
+            "sofa_03",
+            glm::vec3(0., 0., 12.),
+            glm::vec3(0., PI, 0.),
+            glm::vec3(4., 4., 4.),
+        ),
+        // +X: Cabinet and table
+        (
+            "vintage_cabinet_01",
+            "vintage_cabinet_01_a",
+            glm::vec3(17., 0., 0.),
+            glm::vec3(0., -PI / 2., 0.),
+            glm::vec3(4., 4., 4.),
+        ),
+        (
+            "round_wooden_table_01",
+            "round_wooden_table_01",
+            glm::vec3(12., 0., 0.),
+            glm::vec3(0., -PI / 2., 0.),
+            glm::vec3(4., 4., 4.),
+        ),
+        (
+            "modern_ceiling_lamp_01",
+            "modern_ceiling_lamp_01",
+            glm::vec3(12., 8., 0.),
+            glm::vec3(0., -PI / 2., 0.),
+            glm::vec3(4., 4., 4.),
+        ),
+    ] {
+        let (models, materials) = load_obj(&format!("res/models/{}_2k.obj", objname));
+        let texture =
+            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_diff_2k.jpg", name)) };
+        let normal_map =
+            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_nor_gl_2k.jpg", name)) };
+        let roughness_map =
+            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_rough_2k.jpg", name)) };
+        //let opacity_map =
+        //unsafe { ImageTexture::new(gl, &format!("res/textures/{}_opacity_2k.jpg", name)) };
+
+        let mut root_node = Node::new(NodeType::Root);
+        root_node.position = position;
+        root_node.rotation = rotation;
+        root_node.scale = scale;
+        let root = scene_graph.add_child(0, root_node);
+
+        for model in models {
+            let mut node = Node::new(NodeType::Geometry);
+            node.vao = unsafe { Some(VAO::from_mesh(&gl, &model, &materials)) };
+            node.texture = Some(texture);
+            node.normal_map = Some(normal_map);
+            node.roughness_map = Some(roughness_map);
+            //node.opacity_map = Some(opacity_map);
+            scene_graph.add_child(root, node);
+        }
+    }
+    println!(
+        "Loading models took {} seconds",
+        Instant::now().duration_since(before).as_secs_f32(),
+    );
 
     for (position, color) in vec![
-        (glm::vec3(10., 3., 0.), glm::vec3(0.4, 0.4, 0.4)),
-        (glm::vec3(0., 2., 10.), glm::vec3(0.4, 0.4, 0.4)),
+        //(glm::vec3(10., 3., 0.), glm::vec3(0.4, 0.4, 0.4)),
+        (glm::vec3(0., 4., 10.), glm::vec3(0.4, 0.4, 0.4)),
         (glm::vec3(-10., 4., 10.), glm::vec3(0.6, 0.4, 0.4)),
-        (glm::vec3(0., 2., -4.), glm::vec3(0.6, 0.6, 0.6)),
+        //(glm::vec3(0., 2., -4.), glm::vec3(0.6, 0.6, 0.6)),
+        (glm::vec3(12., 8., 0.), glm::vec3(0.6, 0.6, 0.6)), // at lamp
     ] {
         let mut light_node = Node::new(NodeType::Light);
         light_node.position = position.clone();

@@ -34,5 +34,6 @@ void main() {
     vec3 fog_color = vec3(.7);
     float depth = texture(depth_sampler, uv).r;
     float intensity = raymarch_fog(depth);
+    intensity = 0.; // temporary make it disappear TODO undo when you want to
     color = vec4(mix(pre_color, fog_color, intensity), 1.);
 }

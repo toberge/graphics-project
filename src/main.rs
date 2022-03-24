@@ -24,7 +24,7 @@ const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
-const FREE_LOOK: bool = true;
+const FREE_LOOK: bool = false;
 
 // Debug callback to panic upon enountering any OpenGL error
 // from gloom-rs :)))))

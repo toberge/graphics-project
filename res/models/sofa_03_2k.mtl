@@ -1,0 +1,29 @@
+# Blender 3.1.0 MTL File: 'sofa_03_2k.blend'
+# www.blender.org
+
+newmtl sofa_03
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/sofa_03_diff_2k.jpg
+map_Ns  textures/sofa_03_rough_2k.jpg
+map_Bump  -bm 1.000000 textures/sofa_03_nor_gl_2k.exr
+
+newmtl sofa_03_fringe
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/sofa_03_diff_2k.jpg
+map_Ns  textures/sofa_03_rough_2k.jpg
+map_d  textures/sofa_03_opacity_2k.png
+map_Bump  -bm 1.000000 textures/sofa_03_nor_gl_2k.exr
