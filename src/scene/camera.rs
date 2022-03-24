@@ -3,6 +3,8 @@ use std::f32::consts::PI;
 use glm;
 use glutin::event::VirtualKeyCode;
 
+const FAR: f32 = 100.;
+
 // Copy-paste from assignments before Christmas
 // Not intended for final use, should be useful for testing
 
@@ -38,7 +40,7 @@ impl RevolvingCamera {
                 screen_width as f32 / screen_height as f32,
                 PI / 3.,
                 0.5,
-                1000.0,
+                FAR,
             ),
         }
     }
@@ -75,7 +77,7 @@ impl Camera {
                 screen_width as f32 / screen_height as f32,
                 PI / 3.,
                 0.5,
-                1000.0,
+                FAR,
             ),
         }
     }

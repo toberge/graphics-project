@@ -10,8 +10,12 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::ControlFlow;
-use scene::camera::{Camera, RevolvingCamera};
 use scene::setup::create_scene;
+use scene::vao::VAO;
+use scene::{
+    camera::{Camera, RevolvingCamera},
+    texture,
+};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 
@@ -103,6 +107,12 @@ fn main() {
         let shader = unsafe {
             shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag")
         };
+        let post_shader =
+            unsafe { shader::Shader::new(&gl, "res/shaders/post.vert", "res/shaders/post.frag") };
+        let post_buffer = unsafe {
+            texture::PostProcessingTexture::new(&gl, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
+        };
+        let canvas = unsafe { VAO::square(&gl) };
 
         let mut scene_graph = create_scene(&gl);
         scene_graph.final_shader = Some(shader.program);
@@ -154,7 +164,7 @@ fn main() {
                 // Render reflections
                 scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene
-                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
                 gl.clear_color(0.1, 0.2, 0.3, 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
@@ -175,7 +185,21 @@ fn main() {
                         true,
                     );
                 }
-                // eh
+                // Post-processing
+                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+                gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+                gl.use_program(Some(post_shader.program));
+                gl.uniform_3_f32_slice(
+                    gl.get_uniform_location(post_shader.program, "camera_position")
+                        .as_ref(),
+                    rotcam.get_position(time).as_ref(),
+                );
+                gl.active_texture(glow::TEXTURE0);
+                gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.color_buffer_texture));
+                gl.active_texture(glow::TEXTURE1);
+                gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.depth_buffer_texture));
+                canvas.draw(&gl);
+                // Swap which color buffer is displayed
                 context.swap_buffers().unwrap();
             }
         }
