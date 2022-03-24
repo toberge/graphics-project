@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use crate::shader;
 
 use super::graph::{Node, NodeType, SceneGraph};
-use super::texture::FrameBufferTexture;
+use super::texture::{FrameBufferTexture, ImageTexture};
 use super::vao::{load_obj, VAO};
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
@@ -136,6 +136,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         scene_graph.add_child(0, chair_node);
     }
 
+    let sofa_texture = unsafe { ImageTexture::new(gl, "res/textures/sofa_03_diff_1k.jpg") };
     let (sofa_models, sofa_materials) = load_obj("res/models/sofa_03_1k.obj");
     let sofa_vao = unsafe { VAO::from_mesh(&gl, &sofa_models[0], &sofa_materials) };
     let mut sofa_node = Node::new(NodeType::Geometry);
@@ -143,6 +144,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     sofa_node.position.z += 12.;
     sofa_node.rotation.y = PI;
     sofa_node.scale = glm::vec3(4., 4., 4.);
+    sofa_node.texture = Some(sofa_texture);
     scene_graph.add_child(0, sofa_node);
 
     for (position, color) in vec![

@@ -1,4 +1,5 @@
 use glow::*;
+use image::io::Reader as ImageReader;
 
 #[derive(Clone, Copy)]
 pub struct FrameBufferTexture {
@@ -6,6 +7,11 @@ pub struct FrameBufferTexture {
     pub texture: NativeTexture,
     pub width: i32,
     pub height: i32,
+}
+
+#[derive(Clone, Copy)]
+pub struct ImageTexture {
+    pub texture: NativeTexture,
 }
 
 #[derive(Clone, Copy)]
@@ -72,6 +78,51 @@ impl FrameBufferTexture {
             texture,
             width,
             height,
+        }
+    }
+}
+
+impl ImageTexture {
+    pub unsafe fn new(gl: &glow::Context, filepath: &str) -> FrameBufferTexture {
+        // Load image
+
+        let image = ImageReader::open(filepath)
+            .expect(&format!("Could not open {}", filepath))
+            .decode()
+            .expect(&format!("Error processing image at {}", filepath))
+            .flipv();
+
+        // Create texture
+        let texture = gl.create_texture().expect("Could not create texture");
+        gl.bind_texture(glow::TEXTURE_2D, Some(texture));
+        gl.tex_image_2d(
+            glow::TEXTURE_2D,
+            0,
+            glow::RGBA as i32,
+            image.width() as i32,
+            image.height() as i32,
+            0,
+            glow::RGBA,
+            glow::UNSIGNED_BYTE,
+            Some(image.to_rgba8().to_vec().as_slice()),
+        );
+        // Specify mipmap interpolation
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_MAG_FILTER,
+            glow::LINEAR as i32,
+        );
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_MIN_FILTER,
+            glow::LINEAR as i32,
+        );
+
+        FrameBufferTexture {
+            framebuffer: None,
+            texture,
+            width: 0, // irrelevant
+            height: 0,
         }
     }
 }
