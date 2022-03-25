@@ -178,7 +178,7 @@ fn main() {
                 scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
-                gl.clear_color(0.1, 0.2, 0.3, 1.0);
+                gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
                 if FREE_LOOK {

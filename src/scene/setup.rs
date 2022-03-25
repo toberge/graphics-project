@@ -13,29 +13,31 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     ///////// Room /////////
 
+    // Just a floor piece, and everything fades to darkness around it
     let square_vao = unsafe { VAO::square(gl) };
-    let room_size = 20.;
-    for &(x, z, rot) in vec![
-        (0., 1., PI),
-        (0., -1., 0.),
-        (1., 0., -PI / 2.),
-        (-1., 0., PI / 2.),
-    ]
-    .iter()
-    {
-        let mut wall_node = Node::new(NodeType::Geometry);
-        wall_node.vao = Some(square_vao);
-        wall_node.scale = glm::vec3(room_size, room_size, room_size);
-        wall_node.rotation.y = rot;
-        wall_node.position.x = x * room_size;
-        wall_node.position.y = room_size;
-        wall_node.position.z = z * room_size;
-        scene_graph.add_child(0, wall_node);
-    }
+    let room_size = 30.;
     let mut floor_node = Node::new(NodeType::Geometry);
     floor_node.vao = Some(square_vao);
     floor_node.scale = glm::vec3(room_size, room_size, room_size);
     floor_node.rotation.x = -PI / 2.;
+    floor_node.texture = unsafe {
+        Some(ImageTexture::new(
+            gl,
+            "res/textures/weathered_brown_planks_diff_4k.jpg",
+        ))
+    };
+    floor_node.normal_map = unsafe {
+        Some(ImageTexture::new(
+            gl,
+            "res/textures/weathered_brown_planks_nor_gl_4k.jpg",
+        ))
+    };
+    floor_node.roughness_map = unsafe {
+        Some(ImageTexture::new(
+            gl,
+            "res/textures/weathered_brown_planks_rough_4k.jpg",
+        ))
+    };
     scene_graph.add_child(0, floor_node);
 
     ///////// Screens /////////

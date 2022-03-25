@@ -85,7 +85,6 @@ void main() {
         float lc = 0.02;
         float d = length(light - position);
         float L = 1 / (la + d*lb + d*d*lc);
-        L = 1;
 
         // Phong model
         // Parameters – note that specular reflection is independent of surface color!
