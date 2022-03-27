@@ -24,7 +24,7 @@ const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
-const FREE_LOOK: bool = false;
+const FREE_LOOK: bool = true;
 
 // Debug callback to panic upon enountering any OpenGL error
 // from gloom-rs :)))))
@@ -58,9 +58,8 @@ fn main() {
         .with_title("Gloom-rs")
         .with_resizable(false)
         .with_inner_size(glutin::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT));
-    let cb = glutin::ContextBuilder::new()
-        .with_vsync(true)
-        .with_multisampling(4);
+    let cb = glutin::ContextBuilder::new().with_vsync(true);
+    //.with_multisampling(4);
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
     // Use mouse controls with invisible mouse confined to the screen.
     if MOUSE_LOOK && FREE_LOOK {
@@ -96,7 +95,7 @@ fn main() {
             gl.enable(glow::DEPTH_TEST);
             gl.depth_func(glow::LESS);
             gl.enable(glow::CULL_FACE);
-            gl.enable(glow::MULTISAMPLE);
+            //gl.enable(glow::MULTISAMPLE);
             gl.enable(glow::BLEND);
             gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
             gl.enable(glow::DEBUG_OUTPUT_SYNCHRONOUS);

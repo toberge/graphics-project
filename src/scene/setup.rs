@@ -7,6 +7,8 @@ use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::{FrameBufferTexture, ImageTexture};
 use super::vao::{load_obj, VAO};
 
+const SIMPLE: bool = false;
+
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create scene graph
     let mut scene_graph = SceneGraph::new();
@@ -14,31 +16,38 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     ///////// Room /////////
 
     // Just a floor piece, and everything fades to darkness around it
+    let before_floor = Instant::now();
     let square_vao = unsafe { VAO::square(gl) };
     let room_size = 30.;
     let mut floor_node = Node::new(NodeType::Geometry);
     floor_node.vao = Some(square_vao);
     floor_node.scale = glm::vec3(room_size, room_size, room_size);
     floor_node.rotation.x = -PI / 2.;
-    floor_node.texture = unsafe {
-        Some(ImageTexture::new(
-            gl,
-            "res/textures/weathered_brown_planks_diff_4k.jpg",
-        ))
-    };
-    floor_node.normal_map = unsafe {
-        Some(ImageTexture::new(
-            gl,
-            "res/textures/weathered_brown_planks_nor_gl_4k.jpg",
-        ))
-    };
-    floor_node.roughness_map = unsafe {
-        Some(ImageTexture::new(
-            gl,
-            "res/textures/weathered_brown_planks_rough_4k.jpg",
-        ))
-    };
+    if !SIMPLE {
+        floor_node.texture = unsafe {
+            Some(ImageTexture::new(
+                gl,
+                "res/textures/weathered_brown_planks_diff_4k.jpg",
+            ))
+        };
+        floor_node.normal_map = unsafe {
+            Some(ImageTexture::new(
+                gl,
+                "res/textures/weathered_brown_planks_nor_gl_4k.jpg",
+            ))
+        };
+        floor_node.roughness_map = unsafe {
+            Some(ImageTexture::new(
+                gl,
+                "res/textures/weathered_brown_planks_rough_4k.jpg",
+            ))
+        };
+    }
     scene_graph.add_child(0, floor_node);
+    println!(
+        "Loading models took {} seconds",
+        Instant::now().duration_since(before_floor).as_secs_f32(),
+    );
 
     ///////// Screens /////////
 
@@ -139,73 +148,75 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         scene_graph.add_child(0, chair_node);
     }
 
-    let before = Instant::now();
-    for (objname, name, position, rotation, scale) in vec![
-        // +Z: Sofa
-        (
-            "sofa_03",
-            "sofa_03",
-            glm::vec3(0., 0., 12.),
-            glm::vec3(0., PI, 0.),
-            glm::vec3(4., 4., 4.),
-        ),
-        // +X: Cabinet and table
-        (
-            "vintage_cabinet_01",
-            "vintage_cabinet_01_a",
-            glm::vec3(17., 0., 0.),
-            glm::vec3(0., -PI / 2., 0.),
-            glm::vec3(4., 4., 4.),
-        ),
-        (
-            "round_wooden_table_01",
-            "round_wooden_table_01",
-            glm::vec3(12., 0., 0.),
-            glm::vec3(0., -PI / 2., 0.),
-            glm::vec3(4., 4., 4.),
-        ),
-        (
-            "modern_ceiling_lamp_01",
-            "modern_ceiling_lamp_01",
-            glm::vec3(12., 8., 0.),
-            glm::vec3(0., -PI / 2., 0.),
-            glm::vec3(4., 4., 4.),
-        ),
-    ] {
-        let (models, materials) = load_obj(&format!("res/models/{}_2k.obj", objname));
-        let texture =
-            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_diff_2k.jpg", name)) };
-        let normal_map =
-            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_nor_gl_2k.jpg", name)) };
-        let roughness_map =
-            unsafe { ImageTexture::new(gl, &format!("res/textures/{}_rough_2k.jpg", name)) };
-        //let opacity_map =
-        //unsafe { ImageTexture::new(gl, &format!("res/textures/{}_opacity_2k.jpg", name)) };
+    if !SIMPLE {
+        let before = Instant::now();
+        for (objname, name, position, rotation, scale) in vec![
+            // +Z: Sofa
+            (
+                "sofa_03",
+                "sofa_03",
+                glm::vec3(0., 0., 12.),
+                glm::vec3(0., PI, 0.),
+                glm::vec3(4., 4., 4.),
+            ),
+            // +X: Cabinet and table
+            (
+                "vintage_cabinet_01",
+                "vintage_cabinet_01_a",
+                glm::vec3(17., 0., 0.),
+                glm::vec3(0., -PI / 2., 0.),
+                glm::vec3(4., 4., 4.),
+            ),
+            (
+                "round_wooden_table_01",
+                "round_wooden_table_01",
+                glm::vec3(12., 0., 0.),
+                glm::vec3(0., -PI / 2., 0.),
+                glm::vec3(4., 4., 4.),
+            ),
+            (
+                "modern_ceiling_lamp_01",
+                "modern_ceiling_lamp_01",
+                glm::vec3(12., 8., 0.),
+                glm::vec3(0., -PI / 2., 0.),
+                glm::vec3(4., 4., 4.),
+            ),
+        ] {
+            let (models, materials) = load_obj(&format!("res/models/{}_2k.obj", objname));
+            let texture =
+                unsafe { ImageTexture::new(gl, &format!("res/textures/{}_diff_2k.jpg", name)) };
+            let normal_map =
+                unsafe { ImageTexture::new(gl, &format!("res/textures/{}_nor_gl_2k.jpg", name)) };
+            let roughness_map =
+                unsafe { ImageTexture::new(gl, &format!("res/textures/{}_rough_2k.jpg", name)) };
+            //let opacity_map =
+            //unsafe { ImageTexture::new(gl, &format!("res/textures/{}_opacity_2k.jpg", name)) };
 
-        let mut root_node = Node::new(NodeType::Root);
-        root_node.position = position;
-        root_node.rotation = rotation;
-        root_node.scale = scale;
-        let root = scene_graph.add_child(0, root_node);
+            let mut root_node = Node::new(NodeType::Root);
+            root_node.position = position;
+            root_node.rotation = rotation;
+            root_node.scale = scale;
+            let root = scene_graph.add_child(0, root_node);
 
-        for model in models {
-            let mut node = Node::new(NodeType::Geometry);
-            node.vao = unsafe { Some(VAO::from_mesh(&gl, &model, &materials)) };
-            node.texture = Some(texture);
-            node.normal_map = Some(normal_map);
-            node.roughness_map = Some(roughness_map);
-            //node.opacity_map = Some(opacity_map);
-            scene_graph.add_child(root, node);
+            for model in models {
+                let mut node = Node::new(NodeType::Geometry);
+                node.vao = unsafe { Some(VAO::from_mesh(&gl, &model, &materials)) };
+                node.texture = Some(texture);
+                node.normal_map = Some(normal_map);
+                node.roughness_map = Some(roughness_map);
+                //node.opacity_map = Some(opacity_map);
+                scene_graph.add_child(root, node);
+            }
         }
+        println!(
+            "Loading models took {} seconds",
+            Instant::now().duration_since(before).as_secs_f32(),
+        );
     }
-    println!(
-        "Loading models took {} seconds",
-        Instant::now().duration_since(before).as_secs_f32(),
-    );
 
     for (position, color) in vec![
         //(glm::vec3(10., 3., 0.), glm::vec3(0.4, 0.4, 0.4)),
-        (glm::vec3(0., 4., 10.), glm::vec3(0.4, 0.4, 0.4)),
+        (glm::vec3(0., 6., 6.), glm::vec3(0.4, 0.4, 0.4)),
         (glm::vec3(-10., 4., 10.), glm::vec3(0.6, 0.4, 0.4)),
         //(glm::vec3(0., 2., -4.), glm::vec3(0.6, 0.6, 0.6)),
         (glm::vec3(12., 8., 0.), glm::vec3(0.6, 0.6, 0.6)), // at lamp

@@ -77,12 +77,11 @@ void main() {
     for (int i = 0; i < num_light_sources; i++) {
         vec3 light = light_sources[i].position;
         vec3 light_color = light_sources[i].color;
-        float S = 1;
 
         // Attenuation (reduces reach of lightsource)
         float la = 0.01;
         float lb = 0.03;
-        float lc = 0.02;
+        float lc = 0.005;
         float d = length(light - position);
         float L = 1 / (la + d*lb + d*d*lc);
 
@@ -94,8 +93,8 @@ void main() {
         vec3 reflection = reflect(-light_dir, normal);
 
         // Calculation
-        float diffuse_factor = S * L * max(0, dot(light_dir, normal));
-        float specular_factor = S * L * pow(max(0, dot(reflection, cam_dir)), shininess);
+        float diffuse_factor = L * max(0, dot(light_dir, normal));
+        float specular_factor = L * pow(max(0, dot(reflection, cam_dir)), shininess);
         lighting += diffuse_factor * diffuse_reflection * light_color + specular_factor * specular_reflection * light_color;
 
     }
