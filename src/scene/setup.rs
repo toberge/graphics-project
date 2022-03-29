@@ -7,7 +7,7 @@ use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::{FrameBufferTexture, ImageTexture};
 use super::vao::{load_obj, VAO};
 
-const SIMPLE: bool = false;
+const SIMPLE: bool = true;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create scene graph

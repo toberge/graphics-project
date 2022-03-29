@@ -80,10 +80,11 @@ void main() {
 
         // Attenuation (reduces reach of lightsource)
         float la = 0.01;
-        float lb = 0.03;
+        float lb = 0.02;
         float lc = 0.005;
         float d = length(light - position);
         float L = 1 / (la + d*lb + d*d*lc);
+        L = 1;
 
         // Phong model
         // Parameters – note that specular reflection is independent of surface color!
@@ -106,7 +107,8 @@ void main() {
 
     if (use_reflection == 1) {
         float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
-        color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
+        //color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
+        color = vec4(reflection, opacity);
     } else {
         color = vec4(lighting, opacity);
     }

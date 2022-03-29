@@ -177,6 +177,7 @@ fn main() {
                 scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
+                gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
                 gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);

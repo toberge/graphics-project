@@ -192,6 +192,7 @@ impl SceneGraph {
         let canvas = VAO::square(gl);
         for (shader, texture) in self.screen_shaders.clone() {
             gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            gl.viewport(0, 0, texture.width, texture.height);
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             gl.use_program(Some(shader));
             gl.uniform_1_f32(gl.get_uniform_location(shader, "time").as_ref(), time);
@@ -211,6 +212,7 @@ impl SceneGraph {
                 node_index
             ));
             gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
+            gl.viewport(0, 0, texture.width, texture.height);
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             gl.use_program(self.final_shader);
             self.render_in_terms_of(&gl, node_index);
@@ -222,16 +224,21 @@ impl SceneGraph {
     pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., 0.5, 1.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 4., 1.0, 100.0);
         let camera_position: glm::Vec3 =
-            glm::vec4_to_vec3(&(node.model_matrix * glm::zero::<glm::Vec4>()));
-        // Specific rotations expefimented forth
-        let pitch_rotation: glm::Mat4 = glm::rotation(-0.12, &glm::vec3(1.0, 0.0, 0.0));
-        let yaw_rotation: glm::Mat4 = glm::rotation(-PI + 0.14, &glm::vec3(0.0, 1.0, 0.0));
-        let camera_transform =
-            perspective * pitch_rotation * yaw_rotation * glm::inverse(&node.model_matrix);
+            glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
+        let mut rotation: glm::Mat4 = glm::mat3_to_mat4(&glm::mat4_to_mat3(&glm::inverse(
+            &glm::transpose(&node.model_matrix),
+        )))
+        .normalize();
+        rotation = glm::scale(&rotation, &glm::vec3(1., 1., -1.));
+        // flip winding order :)))))
+        // the ultimate hack
+        gl.front_face(glow::CW);
+        let camera_transform = perspective * rotation * glm::translation(&-camera_position);
 
         self.render(gl, self.root, &camera_transform, &camera_position, false);
+        gl.front_face(glow::CCW);
     }
 
     pub unsafe fn render_cubemap_reflections(&self, gl: &glow::Context) {
@@ -250,6 +257,7 @@ impl SceneGraph {
                 .enumerate()
                 {
                     gl.bind_framebuffer(glow::FRAMEBUFFER, Some(texture.framebuffers[i]));
+                    gl.viewport(0, 0, texture.size, texture.size);
                     gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                     self.render_in_terms_of_with_lookat(&gl, node_index, &center, &up);
                 }
@@ -271,7 +279,7 @@ impl SceneGraph {
         let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 1000.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
-        let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix)));
+        let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix))).normalize();
 
         let camera_transform = perspective
             * glm::look_at(
