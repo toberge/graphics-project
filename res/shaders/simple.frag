@@ -42,28 +42,37 @@ out vec4 color;
 
 void main() {
     vec3 cam_dir = normalize(camera_position - position);
+    // Since image files are in opposite order of OpenGL's uvs,
+    // use flipped uvs for textures loaded from image files.
+    // Avoiding flips halves load time.
+    vec2 flipped_uv = vec2(uv.x, 2. - uv.y);
 
     vec3 diffuse_reflection;
     if (use_texture == 1) {
-        diffuse_reflection = texture(texture_sampler, uv).rgb;
+        if (use_reflection == 1) {
+            diffuse_reflection = texture(texture_sampler, uv).rgb;
+        } else {
+            // not camera, use flipped coords
+            diffuse_reflection = texture(texture_sampler, flipped_uv).rgb;
+        }
     } else {
         diffuse_reflection = color_in.rgb;
     }
 
     vec3 normal = normalize(normal_in);
     if (use_normals == 1) {
-        normal = normalize(TBN * (2*vec3(texture(normal_sampler, uv)) - 1));
+        normal = normalize(TBN * (2*vec3(texture(normal_sampler, flipped_uv)) - 1));
     }
 
     float shininess = 32;
     if (use_roughness == 1) {
-        float roughness = texture(roughness_sampler, uv).r;
+        float roughness = texture(roughness_sampler, flipped_uv).r;
         shininess = 5. / (roughness * roughness);
     }
 
     float opacity = 1.;
     if (use_opacity == 1) {
-        opacity = texture(opacity_sampler, uv).r;
+        opacity = texture(opacity_sampler, flipped_uv).r;
     }
 
     vec3 reflection = vec3(0);

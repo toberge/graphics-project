@@ -96,8 +96,7 @@ impl ImageTexture {
         let image = ImageReader::open(filepath)
             .expect(&format!("Could not open {}", filepath))
             .decode()
-            .expect(&format!("Error processing image at {}", filepath))
-            .flipv();
+            .expect(&format!("Error processing image at {}", filepath));
 
         // Create texture
         let texture = gl.create_texture().expect("Could not create texture");
