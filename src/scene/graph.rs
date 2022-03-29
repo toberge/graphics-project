@@ -231,7 +231,7 @@ impl SceneGraph {
             &glm::transpose(&node.model_matrix),
         )))
         .normalize();
-        rotation = glm::scale(&rotation, &glm::vec3(1., 1., -1.));
+        rotation = glm::scale(&rotation, &glm::vec3(-1., 1., 1.));
         // flip winding order :)))))
         // the ultimate hack
         gl.front_face(glow::CW);

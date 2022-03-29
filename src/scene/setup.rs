@@ -7,7 +7,7 @@ use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::{FrameBufferTexture, ImageTexture};
 use super::vao::{load_obj, VAO};
 
-const SIMPLE: bool = false;
+const SIMPLE: bool = true;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create scene graph
@@ -61,15 +61,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     let mut crts: Vec<usize> = vec![];
     for &(position, rotation) in vec![
-        (glm::vec3(0., 0., 5.), glm::vec3(0., 0., 0.)),
-        (glm::vec3(4., 0., 4.), glm::vec3(0., PI / 4., 0.)),
-        (glm::vec3(5., 0., 0.), glm::vec3(0., PI / 2., 0.)),
-        (glm::vec3(4., 0., -4.), glm::vec3(0., 3. * PI / 4., 0.)),
-        (glm::vec3(0., 0., -5.), glm::vec3(0., PI, 0.)),
-        (glm::vec3(-4., 0., -4.), glm::vec3(0., -3. * PI / 4., 0.)),
-        (glm::vec3(-5., 0., 0.), glm::vec3(0., -PI / 2., 0.)),
-        (glm::vec3(-4., 0., 4.), glm::vec3(0., -PI / 4., 0.)),
-        (glm::vec3(0., 4., 0.), glm::vec3(0., 0., 0.)),
+        (glm::vec3(0., 0., 5.), glm::vec3(0., PI, 0.)),
+        (glm::vec3(4., 0., 4.), glm::vec3(0., 5. * PI / 4., 0.)),
+        (glm::vec3(5., 0., 0.), glm::vec3(0., 3. * PI / 2., 0.)),
+        (glm::vec3(4., 0., -4.), glm::vec3(0., 7. * PI / 4., 0.)),
+        (glm::vec3(0., 0., -5.), glm::vec3(0., 0., 0.)),
+        (glm::vec3(-4., 0., -4.), glm::vec3(0., PI / 4., 0.)),
+        (glm::vec3(-5., 0., 0.), glm::vec3(0., PI / 2., 0.)),
+        (glm::vec3(-4., 0., 4.), glm::vec3(0., 3. * PI / 4., 0.)),
+        (glm::vec3(0., 4., 0.), glm::vec3(0., PI, 0.)),
     ]
     .iter()
     {
