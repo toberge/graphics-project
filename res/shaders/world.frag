@@ -19,6 +19,7 @@ in layout(location = 1) vec3 normal_in;
 in layout(location = 2) vec2 uv;
 in layout(location = 3) vec4 color_in;
 in layout(location = 4) mat3 TBN;
+in layout(location = 7) mat3 cubemap_transform;
 
 uniform int use_texture;
 uniform int use_reflection;
@@ -35,6 +36,8 @@ uniform int mode;
 
 uniform float shininess;
 uniform vec3 camera_position;
+
+uniform mat3 normal_transform;
 
 uniform uint num_light_sources;
 uniform LightSource light_sources[MAX_LIGHT_SOURCES];
@@ -84,7 +87,7 @@ void main() {
 
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
-        reflection = texture(reflection_sampler, reflect(cam_dir, normal)).rgb;
+        reflection = texture(reflection_sampler, normal_transform * reflect(cam_dir, normal)).rgb;
     }
 
     vec3 lighting = vec3(0);

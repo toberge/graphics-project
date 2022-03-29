@@ -29,6 +29,7 @@ void main() {
     TBN[2] = normal;
     TBN = TBN;
 
+
     position = vec3(model_transform * vec4(position_in, 1.));
     gl_Position = view_transform * vec4(position_in, 1.0);
 }
