@@ -256,10 +256,10 @@ impl SceneGraph {
             if let Some(texture) = self.nodes[node_index].cubemap_texture {
                 gl.use_program(self.final_shader);
                 for (i, &(center, up)) in [
-                    (glm::vec3(1., 0., 0.), glm::vec3(0., 1., 0.)),  // +X
-                    (glm::vec3(-1., 0., 0.), glm::vec3(0., 1., 0.)), // -X
-                    (glm::vec3(0., 1., 0.), glm::vec3(1., 0., 0.)),  // +Y
-                    (glm::vec3(0., -1., 0.), glm::vec3(1., 0., 0.)), // -Y
+                    (glm::vec3(-1., 0., 0.), glm::vec3(0., 1., 0.)), // +X
+                    (glm::vec3(1., 0., 0.), glm::vec3(0., 1., 0.)),  // -X
+                    (glm::vec3(0., -1., 0.), glm::vec3(1., 0., 0.)), // +Y
+                    (glm::vec3(0., 1., 0.), glm::vec3(1., 0., 0.)),  // -Y
                     (glm::vec3(0., 0., 1.), glm::vec3(0., 1., 0.)),  // +Z
                     (glm::vec3(0., 0., -1.), glm::vec3(0., 1., 0.)), // -Z
                 ]
@@ -293,14 +293,14 @@ impl SceneGraph {
             &glm::transpose(&node.model_matrix),
         )))
         .normalize();
-        rotation = glm::scale(&rotation, &glm::vec3(1., 1., -1.));
-        // flip winding order :)))))
-        // the ultimate hack
+        rotation = glm::scale(&rotation, &glm::vec3(-1., 1., 1.));
         let camera_transform = perspective
             * glm::look_at(&glm::zero(), &center, &up)
             * rotation
             * glm::translation(&-camera_position);
 
+        // flip winding order :)))))
+        // the ultimate hack
         gl.front_face(glow::CW);
         self.render(gl, self.root, &camera_transform, &camera_position, false);
         gl.front_face(glow::CCW);

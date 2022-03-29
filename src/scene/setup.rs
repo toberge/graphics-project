@@ -128,10 +128,11 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     let goose_beak_vao = unsafe { VAO::from_mesh(&gl, &goose_models[1], &goose_materials) };
     let goose_eyes_vao = unsafe { VAO::from_mesh(&gl, &goose_models[2], &goose_materials) };
 
-    let mut goose_node = Node::new(NodeType::Geometry);
+    let mut goose_node = Node::new(NodeType::Screen);
     let mut goose_beak_node = Node::new(NodeType::Geometry);
     let mut goose_eyes_node = Node::new(NodeType::Geometry);
     goose_node.vao = Some(goose_body_vao);
+    goose_node.cubemap_texture = unsafe { Some(CubemapTexture::new(&gl, 400)) };
     goose_beak_node.vao = Some(goose_beak_vao);
     goose_eyes_node.vao = Some(goose_eyes_vao);
     goose_node.rotation.y = PI;
