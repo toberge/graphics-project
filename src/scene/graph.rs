@@ -256,12 +256,12 @@ impl SceneGraph {
             if let Some(texture) = self.nodes[node_index].cubemap_texture {
                 gl.use_program(self.final_shader);
                 for (i, &(center, up)) in [
-                    (glm::vec3(1., 0., 0.), glm::vec3(0., 1., 0.)),  // +X
-                    (glm::vec3(-1., 0., 0.), glm::vec3(0., 1., 0.)), // -X
-                    (glm::vec3(0., 1., 0.), glm::vec3(1., 0., 0.)),  // +Y
-                    (glm::vec3(0., -1., 0.), glm::vec3(1., 0., 0.)), // -Y
-                    (glm::vec3(0., 0., 1.), glm::vec3(0., 1., 0.)),  // +Z
-                    (glm::vec3(0., 0., -1.), glm::vec3(0., 1., 0.)), // -Z
+                    (glm::vec3(1., 0., 0.), glm::vec3(0., -1., 0.)), // +X
+                    (glm::vec3(-1., 0., 0.), glm::vec3(0., -1., 0.)), // -X
+                    (glm::vec3(0., 1., 0.), glm::vec3(0., 0., -1.)), // +Y
+                    (glm::vec3(0., -1., 0.), glm::vec3(0., 0., -1.)), // -Y
+                    (glm::vec3(0., 0., 1.), glm::vec3(0., -1., 0.)), // +Z
+                    (glm::vec3(0., 0., -1.), glm::vec3(0., -1., 0.)), // -Z
                 ]
                 .iter()
                 .enumerate()
@@ -286,19 +286,14 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 1.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
-        let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix))).normalize();
-
         let camera_transform = perspective
-            * glm::look_at(
-                &camera_position,
-                &(camera_position + glm::normalize(&(mat * center))),
-                &glm::normalize(&(mat * up)),
-            );
+            * glm::look_at(&glm::zero(), &center, &up)
+            * glm::translation(&-camera_position);
 
-        self.render(gl, self.root, &camera_transform, &glm::zero(), false);
+        self.render(gl, self.root, &camera_transform, &camera_position, false);
     }
 
     pub unsafe fn render(
@@ -420,6 +415,11 @@ impl SceneGraph {
                     );
                     gl.active_texture(glow::TEXTURE1);
                     gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
+                    gl.active_texture(glow::TEXTURE5);
+                    gl.bind_texture(
+                        glow::TEXTURE_CUBE_MAP,
+                        node.cubemap_texture.map(|t| t.texture),
+                    );
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")

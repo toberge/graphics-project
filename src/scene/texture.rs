@@ -151,6 +151,22 @@ impl CubemapTexture {
             glow::TEXTURE_MIN_FILTER,
             glow::LINEAR as i32,
         );
+        // Clamp to edges between cubemap sides to avoid ugly borders
+        gl.tex_parameter_i32(
+            glow::TEXTURE_CUBE_MAP,
+            glow::TEXTURE_WRAP_R,
+            glow::CLAMP_TO_EDGE as i32,
+        );
+        gl.tex_parameter_i32(
+            glow::TEXTURE_CUBE_MAP,
+            glow::TEXTURE_WRAP_S,
+            glow::CLAMP_TO_EDGE as i32,
+        );
+        gl.tex_parameter_i32(
+            glow::TEXTURE_CUBE_MAP,
+            glow::TEXTURE_WRAP_T,
+            glow::CLAMP_TO_EDGE as i32,
+        );
 
         for i in 0..6 {
             framebuffers[i] = Some(

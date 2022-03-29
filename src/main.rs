@@ -24,12 +24,13 @@ const WINDOW_HEIGHT: u32 = 720;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
-const FREE_LOOK: bool = false;
+const FREE_LOOK: bool = true;
 
 struct State {
     just_reflections: bool,
     just_reflection_vectors: bool,
     just_normals: bool,
+    use_cubemaps: bool,
 }
 
 impl State {
@@ -38,6 +39,7 @@ impl State {
             just_reflections: false,
             just_reflection_vectors: false,
             just_normals: false,
+            use_cubemaps: false,
         }
     }
 
@@ -178,11 +180,12 @@ fn main() {
 
         let mut state = State::new();
 
-        // Render reflections once since there's nothing dynamici in the scene
+        // Render reflections once since there's nothing dynamic in the scene
         // other than the contents of the screens
         scene_graph.update(&gl);
         unsafe {
             scene_graph.render_reflections(&gl);
+            scene_graph.render_cubemap_reflections(&gl);
         }
 
         loop {
@@ -206,6 +209,9 @@ fn main() {
                         VirtualKeyCode::M => {
                             state.just_reflection_vectors = !state.just_reflection_vectors;
                         }
+                        VirtualKeyCode::C => {
+                            state.use_cubemaps = !state.use_cubemaps;
+                        }
                         _ => {}
                     }
                 }
@@ -222,6 +228,7 @@ fn main() {
                     }
                 }
             }
+
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if MOUSE_LOOK {
                 if let Ok(mut delta) = mouse_delta.lock() {
@@ -263,6 +270,11 @@ fn main() {
                 gl.uniform_1_i32(
                     gl.get_uniform_location(shader.program, "mode").as_ref(),
                     state.encode(),
+                );
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(shader.program, "use_cubemaps")
+                        .as_ref(),
+                    state.use_cubemaps as i32,
                 );
                 scene_graph.render(
                     &gl,

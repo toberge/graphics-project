@@ -19,9 +19,11 @@ in layout(location = 1) vec3 normal_in;
 in layout(location = 2) vec2 uv;
 in layout(location = 3) vec4 color_in;
 in layout(location = 4) mat3 TBN;
+in layout(location = 7) mat3 cubemap_transform;
 
 uniform int use_texture;
 uniform int use_reflection;
+uniform int use_cubemaps;
 uniform int use_normals;
 uniform int use_roughness;
 uniform int use_opacity;
@@ -44,6 +46,7 @@ uniform layout(binding = 1) sampler2D reflection_sampler;
 uniform layout(binding = 2) sampler2D normal_sampler;
 uniform layout(binding = 3) sampler2D roughness_sampler;
 uniform layout(binding = 4) sampler2D opacity_sampler;
+uniform layout(binding = 5) samplerCube cubemap_sampler;
 
 out vec4 color;
 
@@ -84,14 +87,18 @@ void main() {
 
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
-        // Transform the reflection vector into tangent space
-        vec3 r = inverse(TBN) * reflect(-cam_dir, normal);
-        // Then combine the uv coords with the reflection vector's xy values
-        // (ignoring depth since distance to point should contribute to the reflection anyway)
-        vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .75);
-        reflection_uv = reflection_uv*.5 + .5;
-        // TODO need to flip u direction on some diagonal monitors
-        reflection = texture(reflection_sampler, reflection_uv).rgb;
+        if (use_cubemaps == 1) {
+            reflection = texture(cubemap_sampler, reflect(-cam_dir, normal)).rgb;
+        } else {
+            // Transform the reflection vector into tangent space
+            vec3 r = inverse(TBN) * reflect(-cam_dir, normal);
+            // Then combine the uv coords with the reflection vector's xy values
+            // (ignoring depth since distance to point should contribute to the reflection anyway)
+            vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .75);
+            reflection_uv = reflection_uv*.5 + .5;
+            // TODO need to flip u direction on some diagonal monitors
+            reflection = texture(reflection_sampler, reflection_uv).rgb;
+        }
     }
 
     vec3 lighting = vec3(0);
