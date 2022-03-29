@@ -286,19 +286,24 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 1000.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
-        let mat = glm::mat4_to_mat3(&glm::transpose(&glm::inverse(&node.model_matrix))).normalize();
-
+        let mut rotation: glm::Mat4 = glm::mat3_to_mat4(&glm::mat4_to_mat3(&glm::inverse(
+            &glm::transpose(&node.model_matrix),
+        )))
+        .normalize();
+        rotation = glm::scale(&rotation, &glm::vec3(1., 1., -1.));
+        // flip winding order :)))))
+        // the ultimate hack
         let camera_transform = perspective
-            * glm::look_at(
-                &camera_position,
-                &(camera_position + glm::normalize(&(mat * center))),
-                &glm::normalize(&(mat * up)),
-            );
+            * glm::look_at(&glm::zero(), &center, &up)
+            * rotation
+            * glm::translation(&-camera_position);
 
-        self.render(gl, self.root, &camera_transform, &glm::zero(), false);
+        gl.front_face(glow::CW);
+        self.render(gl, self.root, &camera_transform, &camera_position, false);
+        gl.front_face(glow::CCW);
     }
 
     pub unsafe fn render(
@@ -412,14 +417,14 @@ impl SceneGraph {
 
             // Reflection texture
             if with_reflection {
-                if let Some(reflection) = node.reflection_map {
+                if let Some(reflection) = node.cubemap_texture {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                             .as_ref(),
                         1,
                     );
                     gl.active_texture(glow::TEXTURE1);
-                    gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
+                    gl.bind_texture(glow::TEXTURE_CUBE_MAP, Some(reflection.texture));
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
