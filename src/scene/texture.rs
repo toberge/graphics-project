@@ -30,7 +30,8 @@ pub struct CubemapTexture {
 
 #[derive(Clone, Copy)]
 pub struct PostProcessingTexture {
-    pub framebuffer: NativeFramebuffer,
+    pub multisampled_buffer: NativeFramebuffer,
+    pub blitted_buffer: NativeFramebuffer,
     pub color_buffer_texture: NativeTexture,
     pub depth_buffer_texture: NativeTexture,
     pub width: i32,
@@ -212,6 +213,52 @@ impl CubemapTexture {
 impl PostProcessingTexture {
     // TODO make this accept multisampling or sth
     pub unsafe fn new(gl: &glow::Context, width: i32, height: i32) -> PostProcessingTexture {
+        let multisampled_buffer = gl
+            .create_framebuffer()
+            .expect("Could not create framebuffer");
+        gl.bind_framebuffer(glow::FRAMEBUFFER, Some(multisampled_buffer));
+
+        // Create renderbuffer attachments
+        let color_buffer = gl
+            .create_renderbuffer()
+            .expect("Could not create renderbuffer");
+        gl.bind_renderbuffer(glow::RENDERBUFFER, Some(color_buffer));
+        gl.renderbuffer_storage_multisample(
+            glow::RENDERBUFFER,
+            4,
+            glow::RGBA,
+            width * 2,
+            height * 2,
+        );
+        gl.framebuffer_renderbuffer(
+            glow::FRAMEBUFFER,
+            glow::COLOR_ATTACHMENT0,
+            glow::RENDERBUFFER,
+            Some(color_buffer),
+        );
+
+        let depth_buffer = gl
+            .create_renderbuffer()
+            .expect("Could not create renderbuffer");
+        gl.bind_renderbuffer(glow::RENDERBUFFER, Some(depth_buffer));
+        gl.renderbuffer_storage_multisample(
+            glow::RENDERBUFFER,
+            4,
+            glow::DEPTH_COMPONENT24,
+            width * 2,
+            height * 2,
+        );
+        gl.framebuffer_renderbuffer(
+            glow::FRAMEBUFFER,
+            glow::DEPTH_ATTACHMENT,
+            glow::RENDERBUFFER,
+            Some(depth_buffer),
+        );
+
+        if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+            panic!("Framebuffer creation failed!");
+        }
+
         let framebuffer = gl
             .create_framebuffer()
             .expect("Could not create framebuffer");
@@ -305,7 +352,8 @@ impl PostProcessingTexture {
         gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
         PostProcessingTexture {
-            framebuffer,
+            multisampled_buffer,
+            blitted_buffer: framebuffer,
             color_buffer_texture,
             depth_buffer_texture,
             width,

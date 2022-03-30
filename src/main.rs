@@ -176,8 +176,9 @@ fn main() {
                 // Render reflections
                 scene_graph.render_reflections(&gl);
                 // Reset framebuffer and render scene
-                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
-                gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.multisampled_buffer));
+                gl.viewport(0, 0, WINDOW_WIDTH as i32 * 2, WINDOW_HEIGHT as i32 * 2);
+                gl.enable(glow::MULTISAMPLE);
                 gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
@@ -198,8 +199,28 @@ fn main() {
                         true,
                     );
                 }
+                gl.disable(glow::MULTISAMPLE);
+                gl.bind_framebuffer(
+                    glow::READ_FRAMEBUFFER,
+                    Some(post_buffer.multisampled_buffer),
+                );
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.blitted_buffer));
+                gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
+                gl.blit_framebuffer(
+                    0,
+                    0,
+                    WINDOW_WIDTH as i32 * 2,
+                    WINDOW_HEIGHT as i32 * 2,
+                    0,
+                    0,
+                    WINDOW_WIDTH as i32,
+                    WINDOW_HEIGHT as i32,
+                    glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT,
+                    glow::NEAREST,
+                );
                 // Post-processing
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+                gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 gl.use_program(Some(post_shader.program));
                 gl.uniform_3_f32_slice(
