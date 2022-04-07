@@ -78,10 +78,13 @@ void main() {
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
         //diffuse_reflection = texture(reflection_sampler, reflect(-cam_dir, normal)).rgb;
+        // Transform the reflection vector into normal space
         vec3 r = inverse(TBN) * reflect(-cam_dir, normal);
-        vec2 reflection_uv = uv.xy*.5 + r.xy*.25+.25;
+        // Then 
+        vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .25 + .75*smoothstep(40., 1., length(camera_position - position)));
+        reflection_uv = reflection_uv*.5 + .5;
         reflection = texture(reflection_sampler, reflection_uv).rgb;
-        //reflection = vec3(reflection_uv.xy, 0.);
+        //reflection = vec3(reflection_uv, 0.);
     }
 
     vec3 lighting = vec3(0);
@@ -103,11 +106,11 @@ void main() {
         vec3 specular_reflection = vec3(1.0, 1.0, 1.0);
         // Vectors
         vec3 light_dir = normalize(light - position);
-        vec3 reflection = reflect(-light_dir, normal);
+        vec3 reflection_dir = reflect(-light_dir, normal);
 
         // Calculation
         float diffuse_factor = L * max(0, dot(light_dir, normal));
-        float specular_factor = L * pow(max(0, dot(reflection, cam_dir)), shininess);
+        float specular_factor = L * pow(max(0, dot(reflection_dir, cam_dir)), shininess);
         lighting += diffuse_factor * diffuse_reflection * light_color + specular_factor * specular_reflection * light_color;
 
     }

@@ -81,7 +81,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let crt_index = scene_graph.add_child(crt_root, crt_node);
         let mut screen_node = Node::new(NodeType::Screen);
         screen_node.vao = Some(screen_vao);
-        screen_node.reflection_map = unsafe { Some(FrameBufferTexture::new(&gl, 200, 200)) };
+        screen_node.reflection_map = unsafe { Some(FrameBufferTexture::new(&gl, 400, 400)) };
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 
