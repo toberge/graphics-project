@@ -78,7 +78,10 @@ void main() {
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
         //diffuse_reflection = texture(reflection_sampler, reflect(-cam_dir, normal)).rgb;
-        reflection = texture(reflection_sampler, uv).rgb;
+        vec3 r = inverse(TBN) * reflect(-cam_dir, normal);
+        vec2 reflection_uv = uv.xy*.5 + r.xy*.25+.25;
+        reflection = texture(reflection_sampler, reflection_uv).rgb;
+        //reflection = vec3(reflection_uv.xy, 0.);
     }
 
     vec3 lighting = vec3(0);

@@ -224,7 +224,7 @@ impl SceneGraph {
     pub unsafe fn render_in_terms_of(&self, gl: &glow::Context, node_index: usize) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 4., 1.0, 100.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 1.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
         let mut rotation: glm::Mat4 = glm::mat3_to_mat4(&glm::mat4_to_mat3(&glm::inverse(
