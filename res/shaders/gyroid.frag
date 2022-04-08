@@ -3,9 +3,10 @@
 // Gyroid inside sphere
 
 // Raymarching parameters
-#define MAX_STEPS 200
-#define NEAR_ENOUGH 0.01
+#define MAX_STEPS 300
+#define NEAR_ENOUGH 0.001
 #define TOO_FAR 20.0
+#define NORMAL_DELTA 0.03
 
 // Lighting parameters
 #define DIFFUSE_FACTOR 0.6
@@ -22,6 +23,7 @@
 
 
 in layout(location = 0) vec3 position;
+in layout(location = 2) vec2 uv;
 
 uniform float time;
 uniform vec2 screen_size;
@@ -66,7 +68,7 @@ float ray_march(vec3 ray_origin, vec3 ray_direction) {
 
 // See https://www.iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
 vec3 estimate_normal(vec3 point) {
-    vec2 e = vec2(NEAR_ENOUGH, 0); // x smol, y none
+    vec2 e = vec2(NORMAL_DELTA, 0); // x smol, y none
     // Find normal as tangent of distance function
     return normalize(vec3(
         distance_from_everything(point + e.xyy) - distance_from_everything(point - e.xyy),
@@ -116,9 +118,7 @@ vec3 lighting(vec3 point, vec3 camera, vec3 ray_direction, float dist) {
 }
 
 void main() {
-    // Transform into range [0, 1]
-    vec2 uv = gl_FragCoord.xy / screen_size;
-    // Then into range [-1, 1]
+    // Transform into range [-1, 1]
     vec2 xy = (uv - .5) * 2.;
 
     // Ray origin

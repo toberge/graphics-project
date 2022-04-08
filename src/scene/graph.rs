@@ -57,7 +57,7 @@ pub struct SceneGraph {
     // Scene graph needs access to shaders during rendering
     pub final_shader: Option<NativeProgram>,
     pub reflection_shader: Option<NativeProgram>,
-    pub screen_shaders: Vec<(NativeProgram, FrameBufferTexture)>,
+    pub screen_shaders: Vec<(NativeProgram, usize)>,
 }
 
 impl Node {
@@ -188,20 +188,17 @@ impl SceneGraph {
         }
     }
 
-    pub unsafe fn render_screens(&self, gl: &glow::Context, time: f32) {
-        let canvas = VAO::square(gl);
-        for (shader, texture) in self.screen_shaders.clone() {
-            gl.bind_framebuffer(glow::FRAMEBUFFER, texture.framebuffer);
-            gl.viewport(0, 0, texture.width, texture.height);
-            gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+    pub unsafe fn render_screens(&self, gl: &glow::Context, time: f32, view_transform: &glm::Mat4) {
+        for (shader, node_index) in self.screen_shaders.clone() {
+            let node = &self.nodes[node_index];
             gl.use_program(Some(shader));
             gl.uniform_1_f32(gl.get_uniform_location(shader, "time").as_ref(), time);
-            gl.uniform_2_f32_slice(
-                gl.get_uniform_location(shader, "screen_size").as_ref(),
-                glm::vec2(texture.width as f32, texture.height as f32).as_slice(),
+            gl.uniform_matrix_4_f32_slice(
+                gl.get_uniform_location(shader, "view_transform").as_ref(),
+                false,
+                (view_transform * node.model_matrix).as_slice(),
             );
-            canvas.draw(&gl);
-            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            node.vao.unwrap().draw(&gl);
         }
     }
 

@@ -16,6 +16,7 @@
 #define SMOOTH_FACTOR 0.3
 
 in layout(location = 0) vec3 position;
+in layout(location = 2) vec2 uv;
 
 uniform float time;
 uniform vec2 screen_size;
@@ -90,9 +91,7 @@ vec3 lighting(vec3 point, vec3 camera, vec3 camDir, float dist) {
 }
 
 void main() {
-    // Transform into range [0, 1]
-    vec2 uv = gl_FragCoord.xy / screen_size;
-    // Then into range [-1, 1]
+    // Transform into range [-1, 1]
     vec2 xy = (uv - .5) * 2.;
 
     // Ray origin

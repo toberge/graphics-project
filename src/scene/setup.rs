@@ -85,7 +85,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 
-    let mut shaders: Vec<(glow::NativeProgram, FrameBufferTexture)> = vec![];
+    let mut shaders: Vec<(glow::NativeProgram, usize)> = vec![];
     for (crt_index, shader_source) in vec![
         (3, "res/shaders/single_color.frag"),
         (0, "res/shaders/smooth.frag"),
@@ -96,7 +96,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
         let texture = unsafe { FrameBufferTexture::new(&gl, 200, 200) };
         (*scene_graph.get_node(crts[crt_index])).texture = Some(texture);
-        shaders.push((shader.program, texture));
+        shaders.push((shader.program, crts[crt_index]));
     }
     scene_graph.screen_shaders = shaders;
 

@@ -111,6 +111,10 @@ fn main() {
         let post_buffer = unsafe {
             texture::PostProcessingTexture::new(&gl, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
         };
+        let crt_buffer = unsafe {
+            texture::PostProcessingTexture::new(&gl, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
+        };
+
         let canvas = unsafe { VAO::square(&gl) };
 
         let mut scene_graph = create_scene(&gl);
@@ -171,33 +175,39 @@ fn main() {
             unsafe {
                 // Update transformations
                 scene_graph.update(&gl);
+                let view_transform = if FREE_LOOK {
+                    fpcam.create_transformation(time)
+                } else {
+                    rotcam.create_transformation(time)
+                };
+                let camera_position = if FREE_LOOK {
+                    fpcam.get_position(time)
+                } else {
+                    rotcam.get_position(time)
+                };
+
                 // Render content
-                scene_graph.render_screens(&gl, time);
+                gl.bind_framebuffer(glow::FRAMEBUFFER, Some(crt_buffer.framebuffer));
+                gl.viewport(0, 0, crt_buffer.width, crt_buffer.height);
+                gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+                scene_graph.render_screens(&gl, time, &view_transform);
+
                 // Render reflections
                 scene_graph.render_reflections(&gl);
+
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
                 gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
                 gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
-                if FREE_LOOK {
-                    scene_graph.render(
-                        &gl,
-                        scene_graph.root,
-                        &fpcam.create_transformation(time),
-                        &fpcam.get_position(time),
-                        true,
-                    );
-                } else {
-                    scene_graph.render(
-                        &gl,
-                        scene_graph.root,
-                        &rotcam.create_transformation(time),
-                        &rotcam.get_position(time),
-                        true,
-                    );
-                }
+                scene_graph.render(
+                    &gl,
+                    scene_graph.root,
+                    &view_transform,
+                    &camera_position,
+                    true,
+                );
                 // Post-processing
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
@@ -205,17 +215,16 @@ fn main() {
                 gl.uniform_3_f32_slice(
                     gl.get_uniform_location(post_shader.program, "camera_position")
                         .as_ref(),
-                    (if FREE_LOOK {
-                        fpcam.get_position(time)
-                    } else {
-                        rotcam.get_position(time)
-                    })
-                    .as_ref(),
+                    camera_position.as_ref(),
                 );
                 gl.active_texture(glow::TEXTURE0);
                 gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.color_buffer_texture));
                 gl.active_texture(glow::TEXTURE1);
                 gl.bind_texture(glow::TEXTURE_2D, Some(post_buffer.depth_buffer_texture));
+                gl.active_texture(glow::TEXTURE2);
+                gl.bind_texture(glow::TEXTURE_2D, Some(crt_buffer.color_buffer_texture));
+                gl.active_texture(glow::TEXTURE3);
+                gl.bind_texture(glow::TEXTURE_2D, Some(crt_buffer.depth_buffer_texture));
                 canvas.draw(&gl);
                 // Swap which color buffer is displayed
                 context.swap_buffers().unwrap();
