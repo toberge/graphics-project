@@ -5,9 +5,6 @@ use glutin::event::VirtualKeyCode;
 
 const FAR: f32 = 100.;
 
-// Copy-paste from assignments before Christmas
-// Not intended for final use, should be useful for testing
-
 pub trait Camera {
     fn get_position(&self, time: f32) -> glm::Vec3;
     fn create_transformation(&mut self, time: f32, delta_time: f32) -> glm::Mat4;
@@ -41,6 +38,7 @@ pub struct RevolvingCamera {
     pub angle: f32,
     pub duration: f32,
     pub destination: glm::Vec3,
+    pub destinations: Vec<glm::Vec3>,
 }
 
 impl RevolvingCamera {
@@ -48,9 +46,13 @@ impl RevolvingCamera {
         origin: glm::Vec3,
         radius: f32,
         height: f32,
+        destinations: Vec<glm::Vec3>,
         screen_width: u32,
         screen_height: u32,
     ) -> RevolvingCamera {
+        if destinations.len() < 8 {
+            panic!("Invalid number of cameras");
+        }
         RevolvingCamera {
             origin,
             radius,
@@ -65,8 +67,24 @@ impl RevolvingCamera {
             start_time: 0.,
             angle: 0.,
             duration: 1.,
-            destination: glm::vec3(0., 2., -6.),
+            destination: destinations[0],
+            destinations,
         }
+    }
+
+    fn start_if_needed(&mut self, time: f32, destination: glm::Vec3) {
+        match self.animation_stage {
+            AnimationStage::NONE => {
+                self.destination = destination;
+                self.animation_stage = AnimationStage::INTO;
+                self.start_time = time;
+            }
+            AnimationStage::STATIONARY => {
+                self.animation_stage = AnimationStage::OUT;
+                self.start_time = time;
+            }
+            _ => {}
+        };
     }
 }
 
@@ -148,17 +166,30 @@ impl Camera for RevolvingCamera {
 
     fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta_time: f32) {
         match keycode {
-            VirtualKeyCode::F => match self.animation_stage {
-                AnimationStage::NONE => {
-                    self.animation_stage = AnimationStage::INTO;
-                    self.start_time = time;
-                }
-                AnimationStage::STATIONARY => {
-                    self.animation_stage = AnimationStage::OUT;
-                    self.start_time = time;
-                }
-                _ => {}
-            },
+            VirtualKeyCode::Key1 => {
+                self.start_if_needed(time, self.destinations[0]);
+            }
+            VirtualKeyCode::Key2 => {
+                self.start_if_needed(time, self.destinations[1]);
+            }
+            VirtualKeyCode::Key3 => {
+                self.start_if_needed(time, self.destinations[2]);
+            }
+            VirtualKeyCode::Key4 => {
+                self.start_if_needed(time, self.destinations[3]);
+            }
+            VirtualKeyCode::Key5 => {
+                self.start_if_needed(time, self.destinations[4]);
+            }
+            VirtualKeyCode::Key6 => {
+                self.start_if_needed(time, self.destinations[5]);
+            }
+            VirtualKeyCode::Key7 => {
+                self.start_if_needed(time, self.destinations[6]);
+            }
+            VirtualKeyCode::Key8 => {
+                self.start_if_needed(time, self.destinations[7]);
+            }
             _ => {}
         };
     }

@@ -38,7 +38,7 @@ pub struct Node {
     pub total_rotation: glm::Vec3,
     pub scale: glm::Vec3,
 
-    model_matrix: glm::Mat4,
+    pub model_matrix: glm::Mat4,
     view_matrix: glm::Mat4,
 }
 
@@ -88,6 +88,12 @@ impl Node {
 
     pub fn add_child(&mut self, index: usize) {
         self.children.push(index);
+    }
+
+    pub fn world_position(&self) -> glm::Vec3 {
+        glm::vec4_to_vec3(
+            &(self.model_matrix * glm::vec4(self.position.x, self.position.y, self.position.z, 1.)),
+        )
     }
 }
 

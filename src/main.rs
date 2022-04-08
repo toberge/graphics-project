@@ -10,17 +10,17 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::ControlFlow;
-use scene::setup::create_scene;
 use scene::{
     camera::{Camera, FirstPersonCamera, RevolvingCamera},
     texture,
     vao::VAO,
 };
+use scene::{graph::Node, setup::create_scene};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 
-const WINDOW_WIDTH: u32 = 1024;
-const WINDOW_HEIGHT: u32 = 769;
+const WINDOW_WIDTH: u32 = 1280;
+const WINDOW_HEIGHT: u32 = 720;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
@@ -120,12 +120,28 @@ fn main() {
         let mut scene_graph = create_scene(&gl);
         scene_graph.final_shader = Some(shader.program);
 
+        scene_graph.update_transformations(scene_graph.root, &glm::identity(), &glm::zero());
+
         let first_frame_time = std::time::Instant::now();
         let mut last_frame_time = first_frame_time;
 
         // Camera object that revolves around the center of the scene
-        let mut rotcam =
-            RevolvingCamera::new(glm::vec3(0., 2., 0.), 15., 7., WINDOW_WIDTH, WINDOW_HEIGHT);
+        // and can zoom in on one of the 8 lower CRTs
+        let mut rotcam = RevolvingCamera::new(
+            glm::vec3(0., 2., 0.),
+            15.,
+            7.,
+            (0..8)
+                .into_iter()
+                .map(|i| {
+                    scene_graph
+                        .get_node(scene_graph.cameras[i])
+                        .world_position()
+                })
+                .collect::<Vec<glm::Vec3>>(),
+            WINDOW_WIDTH,
+            WINDOW_HEIGHT,
+        );
         // Camera object that holds current position, yaw and pitch
         let mut fpcam = FirstPersonCamera::new(WINDOW_WIDTH, WINDOW_HEIGHT);
         fpcam.z += 10.;
