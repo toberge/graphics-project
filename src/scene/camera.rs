@@ -10,9 +10,16 @@ const FAR: f32 = 100.;
 
 pub trait Camera {
     fn get_position(&self, time: f32) -> glm::Vec3;
-    fn create_transformation(&self, time: f32) -> glm::Mat4;
-    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta_time: f32);
+    fn create_transformation(&mut self, time: f32, delta_time: f32) -> glm::Mat4;
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta_time: f32);
     fn handle_mouse(&mut self, delta_xy: (f32, f32));
+}
+
+pub enum AnimationStage {
+    NONE,
+    INTO,
+    STATIONARY,
+    OUT,
 }
 
 pub struct FirstPersonCamera {
@@ -29,6 +36,11 @@ pub struct RevolvingCamera {
     pub radius: f32,
     pub height: f32,
     perspective: glm::Mat4, // Cached version of the unchanging perspective matrix
+    pub animation_stage: AnimationStage,
+    pub start_time: f32,
+    pub angle: f32,
+    pub duration: f32,
+    pub destination: glm::Vec3,
 }
 
 impl RevolvingCamera {
@@ -49,31 +61,107 @@ impl RevolvingCamera {
                 0.5,
                 FAR,
             ),
+            animation_stage: AnimationStage::NONE,
+            start_time: 0.,
+            angle: 0.,
+            duration: 1.,
+            destination: glm::vec3(0., 2., -6.),
         }
     }
 }
 
 impl Camera for RevolvingCamera {
     fn get_position(&self, time: f32) -> glm::Vec3 {
-        glm::vec3(
-            self.radius * time.cos(),
+        // TODO update this accordingly :)))
+        let start = glm::vec3(
+            self.radius * self.angle.cos(),
             self.height,
-            self.radius * time.sin(),
-        )
+            self.radius * self.angle.sin(),
+        );
+        let end = self.destination
+            + 2.0 * glm::vec3(self.destination.x, 0., self.destination.z).normalize();
+        let animation_delta_time = time - self.start_time;
+        let factor = match self.animation_stage {
+            AnimationStage::NONE => 0.,
+            AnimationStage::INTO => (animation_delta_time / self.duration).min(1.),
+            AnimationStage::STATIONARY => 1.,
+            AnimationStage::OUT => (1. - animation_delta_time / self.duration).min(1.),
+        };
+        glm::lerp(&start, &end, factor)
     }
 
     /// Assemble the global transformation matrix
-    fn create_transformation(&self, time: f32) -> glm::Mat4 {
-        let ground = glm::vec3(self.radius * time.cos(), 0., self.radius * time.sin());
+    fn create_transformation(&mut self, time: f32, delta_time: f32) -> glm::Mat4 {
+        // Time is either frozen or relative to when we last stopped viewing something
+        match self.animation_stage {
+            AnimationStage::NONE => {
+                self.angle += delta_time;
+            }
+            _ => {}
+        };
+        let ground = glm::vec3(
+            self.radius * self.angle.cos(),
+            0.,
+            self.radius * self.angle.sin(),
+        );
         let eye = glm::vec3(ground.x, self.height, ground.z);
         let up = glm::cross(
             &(self.origin - eye),
             &glm::cross(&(self.origin - eye), &(ground - eye)),
-        );
-        self.perspective * glm::look_at(&eye, &self.origin, &up)
+        )
+        .normalize();
+
+        let stationary_eye = self.destination
+            + 2.0 * glm::vec3(self.destination.x, 0., self.destination.z).normalize();
+
+        let animation_delta_time = time - self.start_time;
+        // Change state if necessary
+        if animation_delta_time > self.duration {
+            match self.animation_stage {
+                AnimationStage::INTO => {
+                    self.animation_stage = AnimationStage::STATIONARY;
+                }
+                AnimationStage::OUT => {
+                    self.animation_stage = AnimationStage::NONE;
+                }
+                _ => {}
+            }
+            // Reset start time
+            self.start_time = time;
+        }
+
+        let factor = match self.animation_stage {
+            AnimationStage::NONE => 0.,
+            AnimationStage::INTO => (animation_delta_time / self.duration).min(1.),
+            AnimationStage::STATIONARY => 1.,
+            AnimationStage::OUT => (1. - animation_delta_time / self.duration).min(1.),
+        };
+
+        // Interpolation inspired by this fine answer: https://stackoverflow.com/a/27192680
+        let position = glm::mix(&eye, &stationary_eye, factor);
+        let target = glm::slerp(&self.origin, &self.destination, factor);
+        let alignment = glm::slerp(&up, &glm::vec3(0., 1., 0.), factor);
+
+        let transformation = glm::look_at(&position, &target, &alignment);
+        self.perspective * transformation
     }
 
-    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta_time: f32) {}
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta_time: f32) {
+        match keycode {
+            VirtualKeyCode::F => match self.animation_stage {
+                AnimationStage::NONE => {
+                    self.animation_stage = AnimationStage::INTO;
+                    self.start_time = time;
+                }
+                AnimationStage::STATIONARY => {
+                    self.animation_stage = AnimationStage::OUT;
+                    self.start_time = time;
+                }
+                _ => {}
+            },
+            _ => {}
+        };
+    }
     fn handle_mouse(&mut self, delta_xy: (f32, f32)) {}
 }
 
@@ -109,7 +197,7 @@ impl Camera for FirstPersonCamera {
     }
 
     /// Assemble the global transformation matrix
-    fn create_transformation(&self, time: f32) -> glm::Mat4 {
+    fn create_transformation(&mut self, time: f32, delta_time: f32) -> glm::Mat4 {
         // Rotate along x according to pitch
         let pitch_rotation: glm::Mat4 = glm::rotation(self.pitch, &glm::vec3(1.0, 0.0, 0.0));
         // Rotate along y according to yaw
@@ -126,7 +214,7 @@ impl Camera for FirstPersonCamera {
                 * glm::identity()
     }
 
-    fn handle_keys(&mut self, keycode: &VirtualKeyCode, delta: f32) {
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta: f32) {
         let rot = self.just_rotation();
         match keycode {
             VirtualKeyCode::A => {

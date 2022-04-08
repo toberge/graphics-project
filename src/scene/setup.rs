@@ -126,26 +126,28 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
             .collect()
     };
 
-    for (i, (x, y)) in vec![
-        (0., 5.),
-        (5., 0.),
-        (5., 5.),
-        (5., -5.),
-        (-5., -5.),
-        (-5., 5.),
-        (-5., 0.),
-        (0., -5.),
-    ]
-    .iter()
-    .enumerate()
-    {
-        let mut chair_node = Node::new(NodeType::Geometry);
-        chair_node.vao = Some(cube_vaos[i]);
-        chair_node.scale = glm::vec3(4., 4., 4.);
-        chair_node.position.x = x * 4.;
-        chair_node.position.y = 2.;
-        chair_node.position.z = y * 4.;
-        scene_graph.add_child(0, chair_node);
+    if SIMPLE {
+        for (i, (x, y)) in vec![
+            (0., 5.),
+            (5., 0.),
+            (5., 5.),
+            (5., -5.),
+            (-5., -5.),
+            (-5., 5.),
+            (-5., 0.),
+            (0., -5.),
+        ]
+        .iter()
+        .enumerate()
+        {
+            let mut chair_node = Node::new(NodeType::Geometry);
+            chair_node.vao = Some(cube_vaos[i]);
+            chair_node.scale = glm::vec3(4., 4., 4.);
+            chair_node.position.x = x * 4.;
+            chair_node.position.y = 2.;
+            chair_node.position.z = y * 4.;
+            scene_graph.add_child(0, chair_node);
+        }
     }
 
     if !SIMPLE {

@@ -24,7 +24,7 @@ const WINDOW_HEIGHT: u32 = 769;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
-const FREE_LOOK: bool = true;
+const FREE_LOOK: bool = false;
 
 // Debug callback to panic upon enountering any OpenGL error
 // from gloom-rs :)))))
@@ -150,9 +150,9 @@ fn main() {
                         }
                         _ => {
                             if FREE_LOOK {
-                                fpcam.handle_keys(key, delta_time * MOVE_SPEED);
+                                fpcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                             } else {
-                                rotcam.handle_keys(key, delta_time * MOVE_SPEED);
+                                rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                             }
                         }
                     }
@@ -176,9 +176,9 @@ fn main() {
                 // Update transformations
                 scene_graph.update(&gl);
                 let view_transform = if FREE_LOOK {
-                    fpcam.create_transformation(time)
+                    fpcam.create_transformation(time, delta_time)
                 } else {
-                    rotcam.create_transformation(time)
+                    rotcam.create_transformation(time, delta_time)
                 };
                 let camera_position = if FREE_LOOK {
                     fpcam.get_position(time)
