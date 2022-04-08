@@ -1,7 +1,7 @@
 #version 430
 precision mediump float;
 
-#define FRESNEL_BIAS 0.01
+#define FRESNEL_BIAS 0.02
 #define FRESNEL_POWER 2.
 #define FRESNEL_SCALE 0.50
 
@@ -77,14 +77,13 @@ void main() {
 
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
-        //diffuse_reflection = texture(reflection_sampler, reflect(-cam_dir, normal)).rgb;
-        // Transform the reflection vector into normal space
+        // Transform the reflection vector into tangent space
         vec3 r = inverse(TBN) * reflect(-cam_dir, normal);
-        // Then 
-        vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .25 + .75*smoothstep(40., 1., length(camera_position - position)));
+        // Then combine the uv coords with the reflection vector's xy values
+        // (ignoring depth since distance to point should contribute to the reflection anyway)
+        vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .75);
         reflection_uv = reflection_uv*.5 + .5;
         reflection = texture(reflection_sampler, reflection_uv).rgb;
-        //reflection = vec3(reflection_uv, 0.);
     }
 
     vec3 lighting = vec3(0);
@@ -122,8 +121,8 @@ void main() {
 
     if (use_reflection == 1) {
         float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
-        //color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
-        color = vec4(reflection, opacity);
+        color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
+        //color = vec4(reflection, opacity);
     } else {
         color = vec4(lighting, opacity);
     }
