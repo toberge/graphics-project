@@ -87,7 +87,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     let mut shaders: Vec<(glow::NativeProgram, usize)> = vec![];
     for (crt_index, shader_source) in vec![
-        (3, "res/shaders/single_color.frag"),
+        (3, "res/shaders/uv.frag"),
         (0, "res/shaders/smooth.frag"),
         (1, "res/shaders/bloom.frag"),
         (2, "res/shaders/smooth2.frag"),

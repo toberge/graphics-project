@@ -10,12 +10,12 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::ControlFlow;
+use scene::setup::create_scene;
 use scene::{
     camera::{Camera, FirstPersonCamera, RevolvingCamera},
     texture,
     vao::VAO,
 };
-use scene::{graph::Node, setup::create_scene};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 
@@ -103,9 +103,8 @@ fn main() {
         }
 
         // Create a shader program from source
-        let shader = unsafe {
-            shader::Shader::new(&gl, "res/shaders/simple.vert", "res/shaders/simple.frag")
-        };
+        let shader =
+            unsafe { shader::Shader::new(&gl, "res/shaders/world.vert", "res/shaders/world.frag") };
         let post_shader =
             unsafe { shader::Shader::new(&gl, "res/shaders/post.vert", "res/shaders/post.frag") };
         let post_buffer = unsafe {
