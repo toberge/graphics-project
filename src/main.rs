@@ -26,6 +26,30 @@ const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
 const FREE_LOOK: bool = false;
 
+struct State {
+    just_reflections: bool,
+    just_normals: bool,
+}
+
+impl State {
+    fn new() -> State {
+        State {
+            just_reflections: false,
+            just_normals: false,
+        }
+    }
+
+    fn encode(&self) -> i32 {
+        if self.just_reflections {
+            1
+        } else if self.just_normals {
+            2
+        } else {
+            0
+        }
+    }
+}
+
 // Debug callback to panic upon enountering any OpenGL error
 // from gloom-rs :)))))
 pub fn debug_callback(source: u32, e_type: u32, id: u32, severity: u32, error_message: &str) {
@@ -146,6 +170,8 @@ fn main() {
         fpcam.z += 10.;
         fpcam.y += 3.;
 
+        let mut state = State::new();
+
         let mut pitch = 0.;
         let mut yaw = 0.;
 
@@ -157,11 +183,16 @@ fn main() {
             last_frame_time = now;
 
             // Handle keyboard input
+            state.just_reflections = false;
+            state.just_normals = false;
             if let Ok(keys) = pressed_keys.lock() {
                 for key in keys.iter() {
                     match key {
-                        VirtualKeyCode::Space => {
-                            // = fpcam;
+                        VirtualKeyCode::R => {
+                            state.just_reflections = !state.just_reflections;
+                        }
+                        VirtualKeyCode::N => {
+                            state.just_normals = !state.just_normals;
                         }
                         _ => {
                             if FREE_LOOK {
@@ -216,6 +247,10 @@ fn main() {
                 gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(shader.program, "mode").as_ref(),
+                    state.encode(),
+                );
                 scene_graph.render(
                     &gl,
                     scene_graph.root,
@@ -227,6 +262,11 @@ fn main() {
                 gl.bind_framebuffer(glow::FRAMEBUFFER, None);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 gl.use_program(Some(post_shader.program));
+                gl.uniform_1_i32(
+                    gl.get_uniform_location(post_shader.program, "mode")
+                        .as_ref(),
+                    state.encode(),
+                );
                 gl.uniform_3_f32_slice(
                     gl.get_uniform_location(post_shader.program, "camera_position")
                         .as_ref(),

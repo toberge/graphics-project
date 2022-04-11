@@ -26,6 +26,12 @@ uniform int use_normals;
 uniform int use_roughness;
 uniform int use_opacity;
 
+uniform int mode;
+
+#define STANDARD_MODE 0
+#define REFLECTION_MODE 1
+#define NORMALS_MODE 2
+
 uniform float shininess;
 uniform vec3 camera_position;
 
@@ -83,6 +89,7 @@ void main() {
         // (ignoring depth since distance to point should contribute to the reflection anyway)
         vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .75);
         reflection_uv = reflection_uv*.5 + .5;
+        // TODO need to flip u direction on some diagonal monitors
         reflection = texture(reflection_sampler, reflection_uv).rgb;
     }
 
@@ -119,10 +126,15 @@ void main() {
         lighting += diffuse_reflection * EMMISSIVE_FACTOR;
     }
 
-    if (use_reflection == 1) {
+    if (mode == NORMALS_MODE) {
+        color = vec4(normal*.5+.5, 1.);
+    } else if (use_reflection == 1) {
         float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
-        color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
-        //color = vec4(reflection, opacity);
+        if (mode == REFLECTION_MODE) {
+            color = vec4(reflection, opacity);
+        } else {
+            color = vec4(mix(lighting, reflection, fresnel_factor), opacity);
+        }
     } else {
         color = vec4(lighting, opacity);
     }
