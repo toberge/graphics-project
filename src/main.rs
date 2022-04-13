@@ -228,6 +228,7 @@ fn main() {
                     }
                 }
             }
+
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
             if MOUSE_LOOK {
                 if let Ok(mut delta) = mouse_delta.lock() {

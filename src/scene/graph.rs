@@ -258,8 +258,8 @@ impl SceneGraph {
                 for (i, &(center, up)) in [
                     (glm::vec3(1., 0., 0.), glm::vec3(0., -1., 0.)), // +X
                     (glm::vec3(-1., 0., 0.), glm::vec3(0., -1., 0.)), // -X
-                    (glm::vec3(0., 1., 0.), glm::vec3(1., 0., 0.)),  // +Y
-                    (glm::vec3(0., -1., 0.), glm::vec3(1., 0., 0.)), // -Y
+                    (glm::vec3(0., 1., 0.), glm::vec3(0., 0., -1.)), // +Y
+                    (glm::vec3(0., -1., 0.), glm::vec3(0., 0., -1.)), // -Y
                     (glm::vec3(0., 0., 1.), glm::vec3(0., -1., 0.)), // +Z
                     (glm::vec3(0., 0., -1.), glm::vec3(0., -1., 0.)), // -Z
                 ]
@@ -286,7 +286,7 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 100.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 1.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
         let camera_transform = perspective
