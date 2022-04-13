@@ -87,7 +87,7 @@ void main() {
 
     vec3 reflection = vec3(0);
     if (use_reflection == 1) {
-        reflection = texture(reflection_sampler, normal_transform * reflect(cam_dir, normal)).rgb;
+        reflection = texture(reflection_sampler, reflect(-cam_dir, normal)).rgb;
     }
 
     vec3 lighting = vec3(0);
