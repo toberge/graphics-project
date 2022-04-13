@@ -7,7 +7,7 @@ use super::graph::{Node, NodeType, SceneGraph};
 use super::texture::{CubemapTexture, FrameBufferTexture, ImageTexture};
 use super::vao::{load_obj, VAO};
 
-const SIMPLE: bool = true;
+const SIMPLE: bool = false;
 
 pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     // Create scene graph
@@ -102,7 +102,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let crt_index = scene_graph.add_child(crt_root, crt_node);
         let mut screen_node = Node::new(NodeType::Screen);
         screen_node.vao = Some(screen_vao);
-        screen_node.cubemap_texture = unsafe { Some(CubemapTexture::new(&gl, 400)) };
+        screen_node.cubemap_texture = unsafe { Some(CubemapTexture::new(&gl, 800)) };
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 

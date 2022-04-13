@@ -256,12 +256,12 @@ impl SceneGraph {
             if let Some(texture) = self.nodes[node_index].cubemap_texture {
                 gl.use_program(self.final_shader);
                 for (i, &(center, up)) in [
-                    (glm::vec3(1., 0., 0.), glm::vec3(0., 1., 0.)),  // +X
-                    (glm::vec3(-1., 0., 0.), glm::vec3(0., 1., 0.)), // -X
+                    (glm::vec3(1., 0., 0.), glm::vec3(0., -1., 0.)), // +X
+                    (glm::vec3(-1., 0., 0.), glm::vec3(0., -1., 0.)), // -X
                     (glm::vec3(0., 1., 0.), glm::vec3(1., 0., 0.)),  // +Y
                     (glm::vec3(0., -1., 0.), glm::vec3(1., 0., 0.)), // -Y
-                    (glm::vec3(0., 0., 1.), glm::vec3(0., 1., 0.)),  // +Z
-                    (glm::vec3(0., 0., -1.), glm::vec3(0., 1., 0.)), // -Z
+                    (glm::vec3(0., 0., 1.), glm::vec3(0., -1., 0.)), // +Z
+                    (glm::vec3(0., 0., -1.), glm::vec3(0., -1., 0.)), // -Z
                 ]
                 .iter()
                 .enumerate()
@@ -288,23 +288,12 @@ impl SceneGraph {
 
         let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 4.0, 100.0);
         let camera_position: glm::Vec3 =
-            1.5 * glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
-        //let mut rotation: glm::Mat4 = glm::mat3_to_mat4(&glm::mat4_to_mat3(&glm::inverse(
-        //    &glm::transpose(&node.model_matrix),
-        //)))
-        //.normalize();
-        //rotation = glm::scale(&rotation, &glm::vec3(-1., 1., 1.));
+            glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
         let camera_transform = perspective
-            * glm::scaling(&glm::vec3(-1., 1., 1.))
             * glm::look_at(&glm::zero(), &center, &up)
-            //* rotation
             * glm::translation(&-camera_position);
 
-        // flip winding order :)))))
-        // the ultimate hack
-        gl.front_face(glow::CW);
         self.render(gl, self.root, &camera_transform, &camera_position, false);
-        gl.front_face(glow::CCW);
     }
 
     pub unsafe fn render(

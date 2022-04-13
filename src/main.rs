@@ -185,6 +185,12 @@ fn main() {
             scene_graph.render_reflections(&gl);
         }
 
+        // Render reflections *once*
+        scene_graph.update(&gl);
+        unsafe {
+            scene_graph.render_cubemap_reflections(&gl);
+        }
+
         loop {
             // Time delta code from gloom-rs
             let now = std::time::Instant::now();
@@ -254,8 +260,6 @@ fn main() {
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 scene_graph.render_screens(&gl, time, &view_transform);
 
-                // Render reflections
-                scene_graph.render_cubemap_reflections(&gl);
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
                 gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
