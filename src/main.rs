@@ -28,6 +28,7 @@ const FREE_LOOK: bool = false;
 
 struct State {
     just_reflections: bool,
+    just_reflection_vectors: bool,
     just_normals: bool,
 }
 
@@ -35,6 +36,7 @@ impl State {
     fn new() -> State {
         State {
             just_reflections: false,
+            just_reflection_vectors: false,
             just_normals: false,
         }
     }
@@ -44,6 +46,8 @@ impl State {
             1
         } else if self.just_normals {
             2
+        } else if self.just_reflection_vectors {
+            3
         } else {
             0
         }
@@ -98,6 +102,9 @@ fn main() {
     let arc_pressed_keys = Arc::new(Mutex::new(Vec::<VirtualKeyCode>::with_capacity(10)));
     // Make a reference of this vector to send to the render thread
     let pressed_keys = Arc::clone(&arc_pressed_keys);
+    // Do the same for *just* pressed and not held keys
+    let arc_just_pressed_keys = Arc::new(Mutex::new(Vec::<VirtualKeyCode>::with_capacity(10)));
+    let just_pressed_keys = Arc::clone(&arc_just_pressed_keys);
 
     // Set up shared tuple for tracking mouse movement between frames
     let arc_mouse_delta = Arc::new(Mutex::new((0f32, 0f32)));
@@ -187,9 +194,8 @@ fn main() {
             last_frame_time = now;
 
             // Handle keyboard input
-            state.just_reflections = false;
-            state.just_normals = false;
-            if let Ok(keys) = pressed_keys.lock() {
+            // Keypresses trigger state changes
+            if let Ok(mut keys) = just_pressed_keys.lock() {
                 for key in keys.iter() {
                     match key {
                         VirtualKeyCode::R => {
@@ -198,13 +204,22 @@ fn main() {
                         VirtualKeyCode::N => {
                             state.just_normals = !state.just_normals;
                         }
-                        _ => {
-                            if FREE_LOOK {
-                                fpcam.handle_keys(key, time, delta_time * MOVE_SPEED);
-                            } else {
-                                rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
-                            }
+                        VirtualKeyCode::M => {
+                            state.just_reflection_vectors = !state.just_reflection_vectors;
                         }
+                        _ => {}
+                    }
+                }
+                // All presses handled, clear your memory
+                keys.clear();
+            }
+            // Continuously pressed keys trigger camera movements
+            if let Ok(keys) = pressed_keys.lock() {
+                for key in keys.iter() {
+                    if FREE_LOOK {
+                        fpcam.handle_keys(key, time, delta_time * MOVE_SPEED);
+                    } else {
+                        rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                     }
                 }
             }
@@ -341,6 +356,18 @@ fn main() {
                     },
                 ..
             } => {
+                // Keep track of *just* pressed keys
+                if let Ok(mut keys) = arc_just_pressed_keys.lock() {
+                    match key_state {
+                        Pressed => {
+                            if !keys.contains(&keycode) {
+                                keys.push(keycode);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                // As well as pressed *and held* keys
                 if let Ok(mut keys) = arc_pressed_keys.lock() {
                     match key_state {
                         Released => {

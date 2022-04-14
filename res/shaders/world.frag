@@ -31,6 +31,7 @@ uniform int mode;
 #define STANDARD_MODE 0
 #define REFLECTION_MODE 1
 #define NORMALS_MODE 2
+#define REFLECTION_VECTORS_MODE 3
 
 uniform float shininess;
 uniform vec3 camera_position;
@@ -128,6 +129,8 @@ void main() {
 
     if (mode == NORMALS_MODE) {
         color = vec4(normal*.5+.5, 1.);
+    } else if (mode == REFLECTION_VECTORS_MODE) {
+        color = vec4(reflect(-cam_dir, normal)*.5+.5, 1.);
     } else if (use_reflection == 1) {
         float fresnel_factor = max(0, min(1,FRESNEL_BIAS + FRESNEL_SCALE * pow(1. + dot(-cam_dir, normal), FRESNEL_POWER)));
         if (mode == REFLECTION_MODE) {
