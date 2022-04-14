@@ -178,16 +178,11 @@ fn main() {
 
         let mut state = State::new();
 
-        // Render reflections once since there's nothing dynamici in the scene
+        // Render reflections once since there's nothing dynamic in the scene
         // other than the contents of the screens
         scene_graph.update(&gl);
         unsafe {
             scene_graph.render_reflections(&gl);
-        }
-
-        // Render reflections *once*
-        scene_graph.update(&gl);
-        unsafe {
             scene_graph.render_cubemap_reflections(&gl);
         }
 
