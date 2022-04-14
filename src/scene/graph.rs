@@ -407,14 +407,19 @@ impl SceneGraph {
 
             // Reflection texture
             if with_reflection {
-                if let Some(reflection) = node.cubemap_texture {
+                if let Some(reflection) = node.reflection_map {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
                             .as_ref(),
                         1,
                     );
                     gl.active_texture(glow::TEXTURE1);
-                    gl.bind_texture(glow::TEXTURE_CUBE_MAP, Some(reflection.texture));
+                    gl.bind_texture(glow::TEXTURE_2D, Some(reflection.texture));
+                    gl.active_texture(glow::TEXTURE5);
+                    gl.bind_texture(
+                        glow::TEXTURE_CUBE_MAP,
+                        node.cubemap_texture.map(|t| t.texture),
+                    );
                 } else {
                     gl.uniform_1_i32(
                         gl.get_uniform_location(self.final_shader.unwrap(), "use_reflection")
