@@ -229,18 +229,14 @@ impl SceneGraph {
         let perspective: glm::Mat4 = glm::perspective(1., PI / 1.5, 1.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
-        let mut rotation: glm::Mat4 = glm::mat3_to_mat4(&glm::mat4_to_mat3(&glm::inverse(
-            &glm::transpose(&node.model_matrix),
-        )))
-        .normalize();
-        rotation = glm::scale(&rotation, &glm::vec3(-1., 1., 1.));
-        // flip winding order :)))))
-        // the ultimate hack
-        gl.front_face(glow::CW);
+        // Reverse rotation order and either invert the angles or the rotation axes
+        // (yes, I did the latter at first but realized it was... rather odd)
+        let mut rotation: glm::Mat4 = glm::identity();
+        rotation = glm::rotation(-node.total_rotation.y, &glm::vec3(0., 1., 0.)) * rotation;
+        rotation = glm::rotation(-node.total_rotation.x, &glm::vec3(1., 0., 0.)) * rotation;
+        rotation = glm::rotation(-node.total_rotation.z, &glm::vec3(0., 0., 1.)) * rotation;
         let camera_transform = perspective * rotation * glm::translation(&-camera_position);
-
         self.render(gl, self.root, &camera_transform, &camera_position, false);
-        gl.front_face(glow::CCW);
     }
 
     pub unsafe fn render_cubemap_reflections(&self, gl: &glow::Context) {
