@@ -38,8 +38,6 @@ uniform int mode;
 uniform float shininess;
 uniform vec3 camera_position;
 
-uniform mat3 normal_transform;
-
 uniform uint num_light_sources;
 uniform LightSource light_sources[MAX_LIGHT_SOURCES];
 
