@@ -87,16 +87,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
 
     let mut shaders: Vec<(glow::NativeProgram, usize)> = vec![];
     for (crt_index, shader_source) in vec![
-        (3, "res/shaders/uv.frag"),
         (0, "res/shaders/smooth.frag"),
-        (1, "res/shaders/bloom.frag"),
-        (2, "res/shaders/smooth2.frag"),
-        (4, "res/shaders/gyroid.frag"),
-        (5, "res/shaders/shadow.frag"),
+        (1, "res/shaders/gyroid.frag"),
+        (3, "res/shaders/smooth2.frag"),
+        (5, "res/shaders/bloom.frag"),
+        (6, "res/shaders/shadow.frag"),
+        (7, "res/shaders/ripples.frag"),
+        (8, "res/shaders/uv.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
-        let texture = unsafe { FrameBufferTexture::new(&gl, 200, 200) };
-        (*scene_graph.get_node(crts[crt_index])).texture = Some(texture);
         shaders.push((shader.program, crts[crt_index]));
     }
     scene_graph.screen_shaders = shaders;
