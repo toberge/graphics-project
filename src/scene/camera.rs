@@ -37,8 +37,8 @@ pub struct RevolvingCamera {
     pub start_time: f32,
     pub angle: f32,
     pub duration: f32,
-    pub destination: glm::Vec3,
-    pub destinations: Vec<glm::Vec3>,
+    pub destination: (glm::Vec3, glm::Vec3),
+    pub destinations: Vec<(glm::Vec3, glm::Vec3)>,
 }
 
 impl RevolvingCamera {
@@ -46,11 +46,11 @@ impl RevolvingCamera {
         origin: glm::Vec3,
         radius: f32,
         height: f32,
-        destinations: Vec<glm::Vec3>,
+        destinations: Vec<(glm::Vec3, glm::Vec3)>,
         screen_width: u32,
         screen_height: u32,
     ) -> RevolvingCamera {
-        if destinations.len() < 8 {
+        if destinations.len() < 16 {
             panic!("Invalid number of cameras");
         }
         RevolvingCamera {
@@ -72,7 +72,7 @@ impl RevolvingCamera {
         }
     }
 
-    fn start_if_needed(&mut self, time: f32, destination: glm::Vec3) {
+    fn start_if_needed(&mut self, time: f32, destination: (glm::Vec3, glm::Vec3)) {
         match self.animation_stage {
             AnimationStage::NONE => {
                 self.destination = destination;
@@ -90,14 +90,12 @@ impl RevolvingCamera {
 
 impl Camera for RevolvingCamera {
     fn get_position(&self, time: f32) -> glm::Vec3 {
-        // TODO update this accordingly :)))
         let start = glm::vec3(
             self.radius * self.angle.cos(),
             self.height,
             self.radius * self.angle.sin(),
         );
-        let end = self.destination
-            + 2.0 * glm::vec3(self.destination.x, 0., self.destination.z).normalize();
+        let end = self.destination.1;
         let animation_delta_time = time - self.start_time;
         let factor = match self.animation_stage {
             AnimationStage::NONE => 0.,
@@ -129,8 +127,7 @@ impl Camera for RevolvingCamera {
         )
         .normalize();
 
-        let stationary_eye = self.destination
-            + 2.0 * glm::vec3(self.destination.x, 0., self.destination.z).normalize();
+        let stationary_eye = self.destination.1;
 
         let animation_delta_time = time - self.start_time;
         // Change state if necessary
@@ -157,7 +154,7 @@ impl Camera for RevolvingCamera {
 
         // Interpolation inspired by this fine answer: https://stackoverflow.com/a/27192680
         let position = glm::mix(&eye, &stationary_eye, factor);
-        let target = glm::slerp(&self.origin, &self.destination, factor);
+        let target = glm::slerp(&self.origin, &self.destination.0, factor);
         let alignment = glm::slerp(&up, &glm::vec3(0., 1., 0.), factor);
 
         let transformation = glm::look_at(&position, &target, &alignment);
@@ -189,6 +186,30 @@ impl Camera for RevolvingCamera {
             }
             VirtualKeyCode::Key8 => {
                 self.start_if_needed(time, self.destinations[7]);
+            }
+            VirtualKeyCode::F1 => {
+                self.start_if_needed(time, self.destinations[8]);
+            }
+            VirtualKeyCode::F2 => {
+                self.start_if_needed(time, self.destinations[9]);
+            }
+            VirtualKeyCode::F3 => {
+                self.start_if_needed(time, self.destinations[10]);
+            }
+            VirtualKeyCode::F4 => {
+                self.start_if_needed(time, self.destinations[11]);
+            }
+            VirtualKeyCode::F5 => {
+                self.start_if_needed(time, self.destinations[12]);
+            }
+            VirtualKeyCode::F6 => {
+                self.start_if_needed(time, self.destinations[13]);
+            }
+            VirtualKeyCode::F7 => {
+                self.start_if_needed(time, self.destinations[14]);
+            }
+            VirtualKeyCode::F8 => {
+                self.start_if_needed(time, self.destinations[15]);
             }
             _ => {}
         };

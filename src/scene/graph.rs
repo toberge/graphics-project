@@ -86,7 +86,7 @@ impl Node {
         }
     }
 
-    pub fn add_child(&mut self, index: usize) {
+    fn add_child(&mut self, index: usize) {
         self.children.push(index);
     }
 
@@ -94,6 +94,18 @@ impl Node {
         glm::vec4_to_vec3(
             &(self.model_matrix * glm::vec4(self.position.x, self.position.y, self.position.z, 1.)),
         )
+    }
+
+    pub fn look_at_eye(&self, distance: f32) -> glm::Vec3 {
+        glm::vec4_to_vec3(
+            &(self.model_matrix
+                * glm::vec4(
+                    self.position.x,
+                    self.position.y - 1.3, // yes, this got a little more finicky than assumed
+                    self.position.z + distance, // Looking from some distance in the z dir
+                    1.,
+                )),
+        ) + self.world_position()
     }
 }
 

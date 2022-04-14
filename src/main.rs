@@ -161,14 +161,13 @@ fn main() {
             glm::vec3(0., 2., 0.),
             15.,
             7.,
-            (0..8)
+            (0..16)
                 .into_iter()
                 .map(|i| {
-                    scene_graph
-                        .get_node(scene_graph.cameras[i])
-                        .world_position()
+                    let node = scene_graph.get_node(scene_graph.cameras[i]);
+                    return (node.world_position(), node.look_at_eye(2.));
                 })
-                .collect::<Vec<glm::Vec3>>(),
+                .collect::<Vec<(glm::Vec3, glm::Vec3)>>(),
             WINDOW_WIDTH,
             WINDOW_HEIGHT,
         );
