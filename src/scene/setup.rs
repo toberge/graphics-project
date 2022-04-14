@@ -205,6 +205,21 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
                 glm::vec3(0., -PI / 2., 0.),
                 glm::vec3(4., 4., 4.),
             ),
+            // -Z: Drawer with stuff on top
+            (
+                "vintage_wooden_drawer_01",
+                "vintage_wooden_drawer_01",
+                glm::vec3(0., 0., -12.),
+                glm::vec3(0., 0., 0.),
+                glm::vec3(8., 8., 8.),
+            ),
+            (
+                "CashRegister_01",
+                "CashRegister_01",
+                glm::vec3(2., 4.25, -12.2),
+                glm::vec3(0., 0., 0.),
+                glm::vec3(4., 4., 4.),
+            ),
         ] {
             let (models, materials) = load_obj(&format!("res/models/{}_2k.obj", objname));
             let texture =

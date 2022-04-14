@@ -1,0 +1,31 @@
+# Blender 3.1.0 MTL File: 'CashRegister_01_2k.blend'
+# www.blender.org
+
+newmtl CashRegister_01
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd  textures/CashRegister_01_diff_2k.jpg
+map_Ns  textures/CashRegister_01_roughness_2k.jpg
+map_refl  textures/CashRegister_01_metallic_2k.exr
+map_Bump  -bm 1.000000 textures/CashRegister_01_nor_gl_2k.exr
+
+newmtl CashRegister_01_glass
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 0.000000
+illum 9
+map_Kd  textures/CashRegister_01_glass_diff_2k.png
+map_Ns  textures/CashRegister_01_glass_roughness_2k.png
+map_d  textures/CashRegister_01_glass_opacity_2k.png
+map_refl  textures/CashRegister_01_glass_metallic_2k.png
+map_Bump  -bm 1.000000 textures/CashRegister_01_glass_nor_gl_2k.png
