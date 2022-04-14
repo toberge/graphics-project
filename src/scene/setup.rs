@@ -59,17 +59,38 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     crt_root_node.position.y += 2.;
     let crt_root = scene_graph.add_child(0, crt_root_node);
 
+    // 8 screens in a circle at the bottom, some piling up from there
     let mut crts: Vec<usize> = vec![];
+    let radius = 5.;
+    let radius2 = 4.2;
+    let leg = (radius * radius / 2. as f32).sqrt();
+    let leg2 = (radius2 * radius2 / 2. as f32).sqrt();
     for &(position, rotation) in vec![
-        (glm::vec3(0., 0., 5.), glm::vec3(0., PI, 0.)),
-        (glm::vec3(4., 0., 4.), glm::vec3(0., 5. * PI / 4., 0.)),
-        (glm::vec3(5., 0., 0.), glm::vec3(0., 3. * PI / 2., 0.)),
-        (glm::vec3(4., 0., -4.), glm::vec3(0., 7. * PI / 4., 0.)),
-        (glm::vec3(0., 0., -5.), glm::vec3(0., 0., 0.)),
-        (glm::vec3(-4., 0., -4.), glm::vec3(0., PI / 4., 0.)),
-        (glm::vec3(-5., 0., 0.), glm::vec3(0., PI / 2., 0.)),
-        (glm::vec3(-4., 0., 4.), glm::vec3(0., 3. * PI / 4., 0.)),
-        (glm::vec3(0., 4., 0.), glm::vec3(0., PI, 0.)),
+        (glm::vec3(0., 0., radius), glm::vec3(0., PI, 0.)),
+        (glm::vec3(leg, 0., leg), glm::vec3(0., 5. * PI / 4., 0.)),
+        (glm::vec3(radius, 0., 0.), glm::vec3(0., 3. * PI / 2., 0.)),
+        (glm::vec3(leg, 0., -leg), glm::vec3(0., 7. * PI / 4., 0.)),
+        (glm::vec3(0., 0., -radius), glm::vec3(0., 0., 0.)),
+        (glm::vec3(-leg, 0., -leg), glm::vec3(0., PI / 4., 0.)),
+        (glm::vec3(-radius, 0., 0.), glm::vec3(0., PI / 2., 0.)),
+        (glm::vec3(-leg, 0., leg), glm::vec3(0., 3. * PI / 4., 0.)),
+        (glm::vec3(0., 3., radius2), glm::vec3(PI / 6., PI, 0.)),
+        (
+            glm::vec3(leg2, 3., leg2),
+            glm::vec3(PI / 6., 5. * PI / 4., 0.),
+        ),
+        (glm::vec3(-radius2, 3., 0.), glm::vec3(PI / 6., PI / 2., 0.)),
+        (
+            glm::vec3(leg2, 3., -leg2),
+            glm::vec3(PI / 6., 7. * PI / 4., 0.),
+        ),
+        (glm::vec3(0., 3., -radius2), glm::vec3(PI / 6., 0., 0.)),
+        (glm::vec3(-leg2, 3., -leg2), glm::vec3(PI / 6., PI / 4., 0.)),
+        (glm::vec3(radius2, 3., 0.), glm::vec3(PI / 6., -PI / 2., 0.)),
+        (
+            glm::vec3(-leg2, 3., leg2),
+            glm::vec3(PI / 6., 3. * PI / 4., 0.),
+        ),
     ]
     .iter()
     {
@@ -113,6 +134,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     goose_node.vao = Some(goose_body_vao);
     goose_beak_node.vao = Some(goose_beak_vao);
     goose_eyes_node.vao = Some(goose_eyes_vao);
+    goose_node.rotation.y = PI;
 
     let goose_root = scene_graph.add_child(0, goose_node);
     scene_graph.add_child(goose_root, goose_beak_node);

@@ -172,8 +172,12 @@ fn main() {
 
         let mut state = State::new();
 
-        let mut pitch = 0.;
-        let mut yaw = 0.;
+        // Render reflections once since there's nothing dynamici in the scene
+        // other than the contents of the screens
+        scene_graph.update(&gl);
+        unsafe {
+            scene_graph.render_reflections(&gl);
+        }
 
         loop {
             // Time delta code from gloom-rs
@@ -212,8 +216,6 @@ fn main() {
                     } else {
                         rotcam.handle_mouse((delta.0 * LOOK_SPEED, delta.1 * LOOK_SPEED));
                     }
-                    yaw += delta.0 * LOOK_SPEED;
-                    pitch += delta.1 * LOOK_SPEED;
                     *delta = (0.0, 0.0);
                 }
             }
@@ -237,9 +239,6 @@ fn main() {
                 gl.viewport(0, 0, crt_buffer.width, crt_buffer.height);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 scene_graph.render_screens(&gl, time, &view_transform);
-
-                // Render reflections
-                scene_graph.render_reflections(&gl);
 
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));

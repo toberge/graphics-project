@@ -173,10 +173,9 @@ impl SceneGraph {
         // Scale and rotate in terms of the reference point
         mat = glm::translation(&-node.reference_point) * mat;
         mat = glm::scaling(&node.scale) * mat;
-        // TODO consider quaternion here maaaaybe?
         mat = glm::rotation(node.rotation.z, &glm::vec3(0.0, 0.0, 1.0)) * mat;
-        mat = glm::rotation(node.rotation.y, &glm::vec3(0.0, 1.0, 0.0)) * mat;
         mat = glm::rotation(node.rotation.x, &glm::vec3(1.0, 0.0, 0.0)) * mat;
+        mat = glm::rotation(node.rotation.y, &glm::vec3(0.0, 1.0, 0.0)) * mat;
         mat = glm::translation(&node.reference_point) * mat;
         // Translate to position
         mat = glm::translation(&node.position) * mat;
