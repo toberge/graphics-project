@@ -127,8 +127,6 @@ impl Camera for RevolvingCamera {
         )
         .normalize();
 
-        let stationary_eye = self.destination.1;
-
         let animation_delta_time = time - self.start_time;
         // Change state if necessary
         if animation_delta_time > self.duration {
@@ -153,7 +151,7 @@ impl Camera for RevolvingCamera {
         };
 
         // Interpolation inspired by this fine answer: https://stackoverflow.com/a/27192680
-        let position = glm::mix(&eye, &stationary_eye, factor);
+        let position = glm::mix(&eye, &self.destination.1, factor);
         let target = glm::slerp(&self.origin, &self.destination.0, factor);
         let alignment = glm::slerp(&up, &glm::vec3(0., 1., 0.), factor);
 
