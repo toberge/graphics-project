@@ -103,7 +103,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         let mut screen_node = Node::new(NodeType::Screen);
         screen_node.vao = Some(screen_vao);
         screen_node.cubemap_texture = unsafe { Some(CubemapTexture::new(&gl, 2000)) };
-        screen_node.reflection_map = unsafe { Some(FrameBufferTexture::new(&gl, 800, 800)) };
+        screen_node.reflection_map = unsafe { Some(FrameBufferTexture::new(&gl, 2000, 2000)) };
         crts.push(scene_graph.add_child(crt_index, screen_node));
     }
 
@@ -111,12 +111,15 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
     for (crt_index, shader_source) in vec![
         (0, "res/shaders/smooth.frag"),
         (1, "res/shaders/gyroid.frag"),
+        (2, "res/shaders/whateverwave.frag"),
         (3, "res/shaders/smooth2.frag"),
         (4, "res/shaders/landscape.frag"),
         (5, "res/shaders/bloom.frag"),
         (6, "res/shaders/shadow.frag"),
         (7, "res/shaders/ripples.frag"),
         (8, "res/shaders/uv.frag"),
+        (10, "res/shaders/dots.frag"),
+        (14, "res/shaders/spotlights.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
         shaders.push((shader.program, crts[crt_index]));

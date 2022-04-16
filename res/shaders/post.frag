@@ -44,7 +44,7 @@ void main() {
     float crt_depth = texture(crt_depth_sampler, uv).r;
     // Perform manual depth test to see if crt should contribute to color
     if (crt_depth <= depth && mode == STANDARD_MODE) {
-        pre_color = pre_color + 0.4 * crt;
+        pre_color = pre_color + 0.5 * crt;
     }
     // Extra effects
     vec3 fog_color = vec3(.7);
