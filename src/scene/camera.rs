@@ -39,6 +39,7 @@ pub struct RevolvingCamera {
     pub duration: f32,
     pub destination: (glm::Vec3, glm::Vec3),
     pub destinations: Vec<(glm::Vec3, glm::Vec3)>,
+    pub direction: f32,
 }
 
 impl RevolvingCamera {
@@ -69,6 +70,7 @@ impl RevolvingCamera {
             duration: 1.,
             destination: destinations[0],
             destinations,
+            direction: 1.,
         }
     }
 
@@ -111,7 +113,7 @@ impl Camera for RevolvingCamera {
         // Time is either frozen or relative to when we last stopped viewing something
         match self.animation_stage {
             AnimationStage::NONE => {
-                self.angle += delta_time;
+                self.angle += self.direction * delta_time;
             }
             _ => {}
         };
@@ -161,6 +163,9 @@ impl Camera for RevolvingCamera {
 
     fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta_time: f32) {
         match keycode {
+            VirtualKeyCode::Space => {
+                self.direction = -self.direction;
+            }
             VirtualKeyCode::Key1 => {
                 self.start_if_needed(time, self.destinations[0]);
             }

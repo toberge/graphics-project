@@ -212,7 +212,12 @@ fn main() {
                         VirtualKeyCode::C => {
                             state.use_cubemaps = !state.use_cubemaps;
                         }
-                        _ => {}
+                        _ => {
+                            // This camera handles preses only
+                            if !FREE_LOOK {
+                                rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
+                            }
+                        }
                     }
                 }
                 // All presses handled, clear your memory
@@ -223,8 +228,6 @@ fn main() {
                 for key in keys.iter() {
                     if FREE_LOOK {
                         fpcam.handle_keys(key, time, delta_time * MOVE_SPEED);
-                    } else {
-                        rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                     }
                 }
             }
