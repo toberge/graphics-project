@@ -133,6 +133,7 @@ fn main() {
             gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
             gl.enable(glow::DEBUG_OUTPUT_SYNCHRONOUS);
             gl.debug_message_callback(debug_callback);
+            gl.clear_color(0., 0., 0., 1.0);
         }
 
         // Create a shader program from source
@@ -267,7 +268,6 @@ fn main() {
                 // Reset framebuffer and render scene
                 gl.bind_framebuffer(glow::FRAMEBUFFER, Some(post_buffer.framebuffer));
                 gl.viewport(0, 0, WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32);
-                gl.clear_color(0., 0., 0., 1.0);
                 gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                 shader.activate(&gl);
                 gl.uniform_1_i32(

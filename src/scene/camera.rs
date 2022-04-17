@@ -51,8 +51,9 @@ impl RevolvingCamera {
         screen_width: u32,
         screen_height: u32,
     ) -> RevolvingCamera {
+        // (because of hardcoded keybinds for 16 screens)
         if destinations.len() < 16 {
-            panic!("Invalid number of cameras");
+            panic!("Invalid number of destinations");
         }
         RevolvingCamera {
             origin,

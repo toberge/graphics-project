@@ -39,7 +39,6 @@ pub struct Node {
     pub scale: glm::Vec3,
 
     pub model_matrix: glm::Mat4,
-    view_matrix: glm::Mat4,
 }
 
 /// Scene graph where the nodes are stored in a list for simplicity
@@ -82,7 +81,6 @@ impl Node {
             total_rotation: glm::zero(),
             scale: glm::vec3(1., 1., 1.),
             model_matrix: glm::identity(),
-            view_matrix: glm::identity(),
         }
     }
 
@@ -90,12 +88,15 @@ impl Node {
         self.children.push(index);
     }
 
+    /// Position in world space
     pub fn world_position(&self) -> glm::Vec3 {
         glm::vec4_to_vec3(
             &(self.model_matrix * glm::vec4(self.position.x, self.position.y, self.position.z, 1.)),
         )
     }
 
+    /// Position some distance away from this node,
+    /// for the zoom-in functionality of revolving camera
     pub fn look_at_eye(&self, distance: f32) -> glm::Vec3 {
         glm::vec4_to_vec3(
             &(self.model_matrix
@@ -205,6 +206,7 @@ impl SceneGraph {
         }
     }
 
+    /// Render screen contents (to a texture that must be bound outside this code)
     pub unsafe fn render_screens(&self, gl: &glow::Context, time: f32, view_transform: &glm::Mat4) {
         for (shader, node_index) in self.screen_shaders.clone() {
             let node = &self.nodes[node_index];
@@ -219,6 +221,7 @@ impl SceneGraph {
         }
     }
 
+    /// Render planar reflections from all monitors
     pub unsafe fn render_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
             let texture = self.nodes[node_index].reflection_map.expect(&format!(
@@ -230,7 +233,6 @@ impl SceneGraph {
             gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             gl.use_program(self.final_shader);
             self.render_in_terms_of(&gl, node_index);
-            gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
     }
 
@@ -251,6 +253,7 @@ impl SceneGraph {
         self.render(gl, self.root, &camera_transform, &camera_position, false);
     }
 
+    /// Render cubemap reflections from all monitors
     pub unsafe fn render_cubemap_reflections(&self, gl: &glow::Context) {
         for node_index in self.cameras.clone() {
             if let Some(texture) = self.nodes[node_index].cubemap_texture {
@@ -276,7 +279,7 @@ impl SceneGraph {
         }
     }
 
-    /// Render scene tree from the persepective of one particular node
+    /// Render scene tree from one node in a direction given by center and up vectors
     pub unsafe fn render_in_terms_of_with_lookat(
         &self,
         gl: &glow::Context,
@@ -296,6 +299,7 @@ impl SceneGraph {
         self.render(gl, self.root, &camera_transform, &camera_position, false);
     }
 
+    /// Render scene tree, setting uniforms as needed
     pub unsafe fn render(
         &self,
         gl: &glow::Context,
