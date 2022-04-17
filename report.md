@@ -7,6 +7,8 @@ citation-style: "ieee"
 link-citations: true
 header-includes:
 - "\\usepackage{cleveref}" # for pandoc-fignos
+- "\\usepackage{algorithm}"
+- "\\usepackage{algpseudocode}"
 ---
 
 # Concept
@@ -78,7 +80,7 @@ In the final result, the reflections based on cubemaps did not handle rotations 
 
 ## Visualizations
 
-Most of the screens were made to show some ray-marched scene rendered with a fragment shader. The contents were rendered one by one in a first pass to a texture, before being merged with the 'ordinary' scene in a post-processing step. This initial rendering involved drawing each screen plane with the specific shader that was to create its contents, to the same framebuffer successively. This allowed the visuals to be displayed at arbitrary resolutions depending on how the camera was positioned, see +@fig:screens_closer and @fig:screens_zoomed.
+The contents of the screens were rendered one by one in a first pass to a texture, before being merged with the 'ordinary' scene in a post-processing step. This initial rendering involved drawing each screen plane with the specific fragment shader that rendered its contents, to the same framebuffer successively. This allowed the visuals to be displayed at arbitrary resolutions depending on how the camera was positioned, see +@fig:screens_closer and @fig:screens_zoomed.
 
 ![Several shaders rendered to a single texture based on the geometry they are displayed on](img/screen_texture_closer.png){#fig:screens_closer}
 
@@ -88,37 +90,71 @@ Most of the screens were made to show some ray-marched scene rendered with a fra
 
 <!-- involves sampling a distance estimator -->
 
-### Signed Distance Functions
+Most of the screens were made to show some ray-marched scene. The core algorithm of ray marching is shown in algorithm \ref{alg:raymarching}. This technique can be modified to achieve various effects.
 
-Signed distance functions, hereafter called SDFs, give exact values or estimates for the distance to a surface, and the distance _inside_ a surface, with the latter represented as negative values.
+<!-- TODO this needs to go I think -->
+\begin{algorithm}[H]
+\caption{Ray marching}
+\label{alg:raymarching}
+\begin{algorithmic}
+\While{distance travelled $<$ some threshold}
+    \State Find minimal distance to anything in the scene
+    \If{distance to scene $<$ some small threshold}
+        \State Stop marching, the point is close enough (or inside)
+    \Else
+        \State Step forward along the ray (update distance or point)
+    \EndIf 
+\EndWhile
+\State \Return point reached and/or distance travelled
+\end{algorithmic}
+\end{algorithm}
+
+<!-- ### Signed Distance Functions -->
+
+To find the closed distance to anything in the scene, ray marching uses signed distance functions, hereafter called SDFs. SDFs give exact or estimated distances to a surface, as well as the distance to a surface from _inside_ the surface, with the latter represented as negative values. As an example, consider the SDF
+$d = |p - c| - r,$
+where $d$ is the distance from $p$ to the sphere with center $c$ and radius $r$. Here, any point inside the sphere will have $d < 0$ since $|p - c| < r$, and any point outside the sphere's surface will have $d > 0$ since $|p - c| > r$.
 
 <!-- simple illustration and explanation of sphere sdf -->
 
-$$
-math
-$$
+SDFs can be combined using simple operations like `min` and `max` (corresponding to boolean union and intersection, respectively) to create more complex shapes, see +@fig:sculpting for a smoothened example. Additionally, one can increase the complexity of a surface by adding some other function to its SDF, as shown in +@fig:ripples, or by applying other transformations like scaling or twisting, typically by transforming the input to the SDF.
+Some of the shaders in this project use Inigo Iquelez' smooth combination operators [@iq_smooth], and some SDFs were taken from the same person's library [@iq_sdfs].
 
-SDFs can be combined using simple operations like `min` and `max` (corresponding to boolean union and intersection, respectively) to create more complex shapes. Additionally, one can increase the complexity of a surface by adding some other function to its SDF. <!-- demoed on that ripple shader -->
+![Intersecting a plane and a large capsule, then carving out a face with a difference operation](img/sculpting.png){#fig:sculpting}
 
-Some of the shaders in this project use Inigo Iquelez' smooth combination operators [@iq_smooth], and some SDFs might be lifted from the same person's library [@iq_sdfs].
+![Sine waves added to a sphere SDF](img/ripples.png){#fig:ripples}
+
 
 <!-- mention using iq's smooth operators -->
 
-### Bloom
+### Effects demonstrated
 
-Bloom was achieved by finding the number of steps taken to reach the back of the scene and mixing in a color based on a multiple of this step count. This created a ringing effect that I personally liked the look of.
+<!-- ### Bloom -->
+
+Glow was added to some of the shaders by finding the number of steps taken to reach the back of the scene and mixing in a color based on a multiple of this step count. This created a ringing effect outside the intense glow that I personally liked the look of. However, adding this effect to a scene with a periodic and somewhat inaccurate SDF showed a weakness of this technique, see +@fig:gyroid.
+
+![Shader with glow effect on a weird SDF](img/gyroid.png){#fig:gyroid, width=50%}
 
 <!-- pic of gyroid shader maybe -->
 
-### Ambient Occlusion
+<!-- Similarly to glow, it is possible to use the number of steps travelled along a ray to approximate the complexity of the scene at the point it hits. -->
+<!-- (did not really do ambient occlusion) -->
 
-### Shadows
+<!-- ## Shadows -->
 
-Similarly to bloom and ambient occlusion, it is possible to use the (...)
+Since ray marching casts rays through a scene, shadows can be rendered by casting a ray to each light source from the point hit by the intial ray, and checking if these rays hit anything on the way. Shadows can be softened, as shown in +@fig:shadows, by using the minimal distance found on the way to determine how dark the occluded point should be.
+The shaders with shadows in this project use a soft shadow approch proposed by Inigo Quilez [@iq_shadows].
+One of these shaders displays the light source as a glowing orb by sampling the distance to the light source at fixed point along a ray, see +@fig:light_casting_shadow.
 
-The shaders with shadows in this project use the simpler soft shadow approch proposed by Inigo Quilez [@iq_shadows].
+![Shadowed statue](img/shadows1.png){#fig:shadows}
+
+![Light source peeking out beside shadowed statue](img/shadows2.png){#fig:light_casting_shadow}
 
 <!-- show that shadow thing -->
+
+<!-- ## Volumetrics -->
+
+
 
 # Conclusion
 
@@ -132,8 +168,6 @@ Don't wade too far off into the rabbit hole of SDF and expect reflections to tak
 
 
 # Appendix
-
-![Sine waves added to sphere distance](img/test.png){#fig:ripples}
 
 # References
 
