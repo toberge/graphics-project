@@ -119,6 +119,7 @@ pub fn create_scene(gl: &glow::Context) -> SceneGraph {
         (7, "res/shaders/ripples.frag"),
         (8, "res/shaders/uv.frag"),
         (10, "res/shaders/dots.frag"),
+        (12, "res/shaders/sunrise.frag"),
         (14, "res/shaders/spotlights.frag"),
     ] {
         let shader = unsafe { shader::Shader::new(&gl, "res/shaders/screen.vert", shader_source) };
