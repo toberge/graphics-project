@@ -74,6 +74,52 @@ impl FrameBufferTexture {
         gl.framebuffer_texture(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, Some(texture), 0);
         gl.draw_buffer(glow::COLOR_ATTACHMENT0);
 
+        // Depth texture
+        // (no need to do it as a texture here, but this does *work* at least)
+        let depth_buffer_texture = gl.create_texture().expect("Could not create texture");
+        gl.bind_texture(glow::TEXTURE_2D, Some(depth_buffer_texture));
+        gl.tex_image_2d(
+            glow::TEXTURE_2D,
+            0,
+            glow::DEPTH_COMPONENT24 as i32,
+            width,
+            height,
+            0,
+            glow::DEPTH_COMPONENT,
+            glow::FLOAT,
+            None,
+        );
+        //// Specify mipmap interpolation
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_MAG_FILTER,
+            glow::LINEAR as i32,
+        );
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_MIN_FILTER,
+            glow::LINEAR as i32,
+        );
+        // Specify depth-specific options
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_COMPARE_FUNC,
+            glow::LEQUAL as i32,
+        );
+        gl.tex_parameter_i32(
+            glow::TEXTURE_2D,
+            glow::TEXTURE_COMPARE_MODE,
+            glow::NONE as i32,
+        );
+
+        // Attach texture to framebuffer
+        gl.framebuffer_texture(
+            glow::FRAMEBUFFER,
+            glow::DEPTH_ATTACHMENT,
+            Some(depth_buffer_texture),
+            0,
+        );
+
         if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
             panic!("Framebuffer creation failed!");
         }
@@ -92,7 +138,6 @@ impl FrameBufferTexture {
 impl ImageTexture {
     pub unsafe fn new(gl: &glow::Context, filepath: &str) -> FrameBufferTexture {
         // Load image
-
         let image = ImageReader::open(filepath)
             .expect(&format!("Could not open {}", filepath))
             .decode()
@@ -198,12 +243,58 @@ impl CubemapTexture {
             );
             gl.draw_buffer(glow::COLOR_ATTACHMENT0);
 
-            //if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-            //    panic!(
-            //        "Framebuffer creation failed! {}",
-            //        gl.check_framebuffer_status(glow::FRAMEBUFFER)
-            //    );
-            //}
+            // Depth texture
+            // (no need to do it as a texture here, but this does *work* at least)
+            let depth_buffer_texture = gl.create_texture().expect("Could not create texture");
+            gl.bind_texture(glow::TEXTURE_2D, Some(depth_buffer_texture));
+            gl.tex_image_2d(
+                glow::TEXTURE_2D,
+                0,
+                glow::DEPTH_COMPONENT24 as i32,
+                size,
+                size,
+                0,
+                glow::DEPTH_COMPONENT,
+                glow::FLOAT,
+                None,
+            );
+            //// Specify mipmap interpolation
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_MAG_FILTER,
+                glow::LINEAR as i32,
+            );
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_MIN_FILTER,
+                glow::LINEAR as i32,
+            );
+            // Specify depth-specific options
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_COMPARE_FUNC,
+                glow::LEQUAL as i32,
+            );
+            gl.tex_parameter_i32(
+                glow::TEXTURE_2D,
+                glow::TEXTURE_COMPARE_MODE,
+                glow::NONE as i32,
+            );
+
+            // Attach texture to framebuffer
+            gl.framebuffer_texture(
+                glow::FRAMEBUFFER,
+                glow::DEPTH_ATTACHMENT,
+                Some(depth_buffer_texture),
+                0,
+            );
+
+            if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+                panic!(
+                    "Framebuffer creation failed! {}",
+                    gl.check_framebuffer_status(glow::FRAMEBUFFER)
+                );
+            }
         }
 
         gl.bind_framebuffer(glow::FRAMEBUFFER, None);
@@ -226,7 +317,6 @@ impl CubemapTexture {
 }
 
 impl PostProcessingTexture {
-    // TODO make this accept multisampling or sth
     pub unsafe fn new(gl: &glow::Context, width: i32, height: i32) -> PostProcessingTexture {
         let framebuffer = gl
             .create_framebuffer()
