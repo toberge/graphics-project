@@ -49,8 +49,6 @@ $$
 \max(0, \min(1, \text{bias} + \text{scale} \cdot (1 + I \cdot N)^{\text{power}}))
 $$
 
-![Fresnel effect kicking in at a steep viewing angle](img/reflection_fresnel1.png){#fig:fresnel}
-
 <!-- ### Planar Approach -->
 
 <!-- just render one perspective with relatively wide FOV and map it using [show formula of that function] -->
@@ -63,28 +61,17 @@ $$
 $$
 where $t_{uv}$ is the texture coordinates, $TBN$ is a matrix that transforms from tangent to world space, $r$ is the reflection vector and $r_{uv}$ is the reflection texture coordinates. This mapping resulted in an odd bending of the reflections, and did not look particularily realistic, see +@fig:planar.
 
-![Planar reflection displayed in full w/o Fresnel](img/reflection_planar1.png){#fig:planar}
-
 <!-- ### Cubemaps -->
 
 The second approach was to use cubemaps --- collections of six textures representing the faces of a cube. In the case of reflections, the textures are based on what can be seen of the surrounding area from a reflective object. This was implemented using look-at matrices with up and center vectors tailored to each of the six faces.
-
-![Cubemap reflection displayed in full w/o Fresnel](img/reflection_cubemap1.png){#fig:planar}
 
 Implementing both approches was more troublesome than expected. Creating the transformation matrices for the perspectives of the reflective objects turned out to be a minefield of near-solutions that flipped some part of the scene around and sometimes required reversing the winding order to have the result make any sense at all. The transformation was reworked to use the total rotation along each axis instead of extracting rotation from the model matrices, which seemed to eliminate some of the issues.
 In the final stretch of the project, the reflections were tested in a more complex environment and several issues were discovered and fixed --- the most egregious was the lack of depth testing because depth buffers had not been bound in the creation of the off-screen framebuffers, see +@fig:depth_issues.
 In the final result, the reflections based on cubemaps did not handle rotations between the four cardinal directions well. Additionally, since the reflections needed a moderately large canvas for details to carry over properly, and adding interesting animations to the surrounding environment was not prioritized, they were rendered once at the start instead of for each frame.
 
-![Lack of depth testing, kept for posterity](img/depth_issues.png){#fig:depth_issues}
-
-
 ## Visualizations
 
 The contents of the screens were rendered one by one in a first pass to a texture, before being merged with the 'ordinary' scene in a post-processing step. This initial rendering involved drawing each screen plane with the specific fragment shader that rendered its contents, to the same framebuffer successively. This allowed the visuals to be displayed at arbitrary resolutions depending on how the camera was positioned, see +@fig:screens_closer and @fig:screens_zoomed.
-
-![Several shaders rendered to a single texture based on the geometry they are displayed on](img/screen_texture_closer.png){#fig:screens_closer}
-
-![Closeup of one screen](img/screen_texture_zoom.png){#fig:screens_zoomed}
 
 ### Ray Marching
 
@@ -120,20 +107,14 @@ where $d$ is the distance from $p$ to the sphere with center $c$ and radius $r$.
 SDFs can be combined using simple operations like `min` and `max` (corresponding to boolean union and intersection, respectively) to create more complex shapes, see +@fig:sculpting for a smoothened example. Additionally, one can increase the complexity of a surface by adding some other function to its SDF, as shown in +@fig:ripples, or by applying other transformations like scaling or twisting, typically by transforming the input to the SDF.
 Some of the shaders in this project use Inigo Iquelez' smooth combination operators [@iq_smooth], and some SDFs were taken from the same person's library [@iq_sdfs].
 
-![Intersecting a plane and a large capsule, then carving out a face with a difference operation](img/sculpting.png){#fig:sculpting}
-
-![Sine waves added to a sphere SDF](img/ripples.png){#fig:ripples}
-
 
 <!-- mention using iq's smooth operators -->
 
-### Effects demonstrated
+### Effects
 
 <!-- ### Bloom -->
 
 Glow was added to some of the shaders by finding the number of steps taken to reach the back of the scene and mixing in a color based on a multiple of this step count. This created a ringing effect outside the intense glow that I personally liked the look of. However, adding this effect to a scene with a periodic and somewhat inaccurate SDF showed a weakness of this technique, see +@fig:gyroid.
-
-![Shader with glow effect on a weird SDF](img/gyroid.png){#fig:gyroid, width=50%}
 
 <!-- pic of gyroid shader maybe -->
 
@@ -145,10 +126,6 @@ Glow was added to some of the shaders by finding the number of steps taken to re
 Since ray marching casts rays through a scene, shadows can be rendered by casting a ray to each light source from the point hit by the intial ray, and checking if these rays hit anything on the way. Shadows can be softened, as shown in +@fig:shadows, by using the minimal distance found on the way to determine how dark the occluded point should be.
 The shaders with shadows in this project use a soft shadow approch proposed by Inigo Quilez [@iq_shadows].
 One of these shaders displays the light source as a glowing orb by sampling the distance to the light source at fixed point along a ray, see +@fig:light_casting_shadow.
-
-![Shadowed statue](img/shadows1.png){#fig:shadows}
-
-![Light source peeking out beside shadowed statue](img/shadows2.png){#fig:light_casting_shadow}
 
 <!-- show that shadow thing -->
 
@@ -166,8 +143,32 @@ One of these shaders displays the light source as a glowing orb by sampling the 
 
 Don't wade too far off into the rabbit hole of SDF and expect reflections to take very little time. See @fig:ripples.
 
+# References
+
+::: {#refs}
+:::
 
 # Appendix
 
-# References
+![Fresnel effect kicking in at a steep viewing angle](img/reflection_fresnel1.png){#fig:fresnel}
 
+![Planar reflection displayed in full w/o Fresnel](img/reflection_planar1.png){#fig:planar}
+
+![Cubemap reflection displayed in full w/o Fresnel](img/reflection_cubemap1.png){#fig:planar}
+
+![Lack of depth testing, kept for posterity](img/depth_issues.png){#fig:depth_issues}
+
+
+![Several shaders rendered to a single texture based on the geometry they are displayed on](img/screen_texture_closer.png){#fig:screens_closer}
+
+![Moving closer to one screen increases the resolution its shader is rendered at](img/screen_texture_zoom.png){#fig:screens_zoomed}
+
+![Intersecting a plane and a large capsule, then carving out a face with a difference operation](img/sculpting.png){#fig:sculpting}
+
+![Sine waves added to a sphere SDF](img/ripples.png){#fig:ripples}
+
+![Shader with glow effect on a weird SDF](img/gyroid.png){#fig:gyroid width=50%}
+
+![Shadowed statue](img/shadows1.png){#fig:shadows}
+
+![Light source peeking out beside shadowed statue](img/shadows2.png){#fig:light_casting_shadow}
