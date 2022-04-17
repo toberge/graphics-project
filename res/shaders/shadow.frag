@@ -46,8 +46,8 @@ float capsule( vec3 p, vec3 a, vec3 b, float r )
 
 // Smooth operators by Inigo Iquilez
 float smooth_min(float a, float b, float k) {
-    float h = max(k - abs(a-b), 0.) / k;
-    return min(a, b) - h*h*h*k*(1./6.);
+    float h = clamp( 0.5 + 0.5*(a-b)/k, 0.0, 1.0 );
+    return mix( a, b, h ) - k*h*(1.0-h);
 }
 
 float smooth_diff( float d1, float d2, float k ) {
@@ -67,6 +67,15 @@ float distance_from_everything(vec3 point) {
     return d;
 }
 
+vec3 sun_position() {
+    float orbit_radius = 5.;
+#ifdef ANIMATE
+    return vec3(orbit_radius*cos(1.2*time), 2., orbit_radius*sin(1.2*time));
+#else
+    return vec3(-.5*orbit_radius, 1., -orbit_radius);
+#endif
+}
+
 float ray_march(vec3 ray_origin, vec3 ray_direction) {
     // How far we've traveled
     float d = 0.0;
@@ -84,7 +93,31 @@ float ray_march(vec3 ray_origin, vec3 ray_direction) {
     return d;
 }
 
-// Approach taken from https://www.iquilezles.org/www/articles/rmshadows/rmshadows.htm
+vec3 sample_sun(vec3 ray_origin, vec3 ray_direction) {
+    float d = 0.0;
+    float intensity = 0.;
+    float inside = 0.;
+    vec3 light = sun_position();
+    for (int i = 0; i < MAX_STEPS; i++) {
+        // Where we stand
+        vec3 point = ray_origin + ray_direction*d;
+        // How far anything is from us
+        float current_distance = distance_from_everything(point);
+        // March on in fixed steps
+        d += 1.;
+        // Sample distance to light
+        intensity += pow(smoothstep(2., 0., length(point - light)), 3.);
+        // Sample negative values of the SDF
+        if (current_distance < NEAR_ENOUGH)
+            inside += abs(current_distance);
+        if (d > TOO_FAR)
+            break;
+    }
+    // Diminish intensity based on how obstructed the view of the sun was
+    return vec3(intensity) * exp(-10.*inside);
+}
+
+// Approach taken from https://iquilezles.org/articles/rmshadows
 float ray_shadow(vec3 ray_origin, vec3 ray_direction, vec3 light_position) {
     // Start some distance along the rain to avoid counting shadow because we're close to the surface
     float d = NEAR_ENOUGH;
@@ -109,7 +142,7 @@ float ray_shadow(vec3 ray_origin, vec3 ray_direction, vec3 light_position) {
     return max(shade, 0.);
 }
 
-// See https://www.iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
+// See https://iquilezles.org/articles/normalsSDF
 vec3 estimate_normal(vec3 point) {
     vec2 e = vec2(NEAR_ENOUGH, 0); // x smol, y none
     // Find normal as tangent of distance function
@@ -126,12 +159,7 @@ vec3 lighting(vec3 point, vec3 camera, vec3 ray_direction, float dist) {
     if (length(point - camera) > TOO_FAR*0.99)
         return BACKGROUND_COLOR;
 
-    float orbit_radius = 5.;
-#ifdef ANIMATE
-    vec3 light_position = vec3(orbit_radius*cos(1.2*time), 1., orbit_radius*sin(1.2*time));
-#else
-    vec3 light_position = vec3(-.5*orbit_radius, 1., -orbit_radius);
-#endif
+    vec3 light_position = sun_position();
 
     vec3 n = estimate_normal(point);
     vec3 l = normalize(light_position-point);
@@ -154,6 +182,7 @@ vec3 lighting(vec3 point, vec3 camera, vec3 ray_direction, float dist) {
 #endif
 }
 
+
 void main() {
     // Transform into range [-1, 1]
     vec2 xy = (uv - .5) * 2.;
@@ -167,9 +196,9 @@ void main() {
     
     vec3 point = camera + ray_direction * d;
     
-    vec3 base_color = lighting(point, camera, ray_direction, d) + dither(uv);
-    base_color *= 1.5;
+    vec3 base_color = lighting(point, camera, ray_direction, d);
+    base_color += sample_sun(camera, ray_direction);
     base_color = smoothstep(0., 1., base_color);
 
-    color = vec4(base_color, 1.);
+    color = vec4(base_color + dither(uv), 1.);
 }
