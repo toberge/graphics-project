@@ -10,8 +10,6 @@ citation-style: "ieee"
 link-citations: true
 header-includes:
 - "\\usepackage{cleveref}" # for pandoc-fignos
-- "\\usepackage{algorithm}"
-- "\\usepackage{algpseudocode}"
 ---
 
 # Concept
@@ -27,7 +25,7 @@ A personal note: I stumbled down the rabbit hole of this rendering technique a m
 
 <!-- This section will go over the various techniques used to render the complete scene and highlight problems. -->
 
-The project was written in Rust with the `glow-rs` wrapper for OpenGL. The scene graph was implemented with node references as indexes into a list of nodes, inspired by an article that described a simple way to do tree structures in Rust without dealing with the language's pecularities [@index_tree]. Lighting and material properties was handled similarly to the last assignment.
+The project was written in Rust with the `glow-rs` wrapper for OpenGL. The scene graph was implemented with node references as indexes into a list of nodes, inspired by an article that described a simple way to do tree structures in Rust without dealing with the language's pecularities [@index_tree]. Lighting and material properties was handled similarly to the last assignment. The final scene uses models from *[PolyHaven](https://polyhaven.com/)*, one specific goose model by *[Atlas on Sketchfab](https://sketchfab.com/3d-models/goose-low-poly-3318893e41fc4d2f9f497776da95c13a)* and a simple CRT model (with artistic liberties) made for this project.
 
 ## Animated Camera
 
@@ -47,7 +45,7 @@ The animations flowed smoothly, but it was possible to clip through the heap of 
 
 ## Reflections
 
-For real-time reflections, two different approaches were tested. Both involved rendering the scene from the perspective of the reflective objects. Regardless of the approach used for rendering the reflected environment, the reflection was added to the color of the reflective surface weighted by an approximation of the Fresnel effect [@nvidia_fresnel], as shown in +@fig:fresnel.
+For real-time reflections, two different approaches were tested. Both involved rendering the scene from the perspective of the reflective objects. Regardless of the approach used for rendering the reflected environment, the reflection was added to the color of the reflective surface weighted by an approximation of the Fresnel effect [@nvidia_fresnel], see +@fig:fresnel for a visual example.
 $$
 \max(0, \min(1, \text{bias} + \text{scale} \cdot (1 + I \cdot N)^{\text{power}}))
 $$
@@ -94,7 +92,7 @@ Some of the shaders in this project use Inigo Iquelez' smooth combination operat
 
 <!-- something about that landscape video -->
 
-On the less accurate side of SDFs, it is possible to use functions from 2D coordinates to scalars as 3D SDFs by letting the distance from a point to the $y$ value given by the function be the distance estimate to the whole landscape. Two of the shaders use this approach, with terrain generation from a tutorial on generating landscapes in this way [@iq_landscape], see +@fig:landscapewave. This sort of SDF has blatant inaccuracies that can be alleviated by stepping _less than_ the estimated distance to the scene along the ray while marching (compare +@fig:landscape to @fig:landscape_wrong), which might lead to reduced performance.
+On the less accurate side of SDFs, it is possible to use functions from 2D coordinates to scalars as 3D SDFs by letting the distance from a point to the $y$ value given by the function be the distance estimate to the whole landscape. Two of the shaders use this approach, with terrain generation from a tutorial on generating landscapes in this way [@iq_landscape], see +@fig:landscapewave. This sort of SDF has blatant inaccuracies that can be alleviated by stepping _less than_ the estimated distance to the scene along the ray while marching (compare +@fig:landscape to @fig:landscape_wrong), which might lead to reduced performance. _Note that the two landscape shaders may not render properly on Nvidia GPUs. I do not know why._
 
 ### Effects
 
@@ -152,7 +150,7 @@ Compared to the reflections, displaying the output of different fragment shaders
 
 \clearpage
 
-![Shadowed statue](img/shadows1.png){#fig:shadows}
+![Partially shadowed statue](img/shadows1.png){#fig:shadows}
 
 ![Light source peeking out beside shadowed statue](img/shadows2.png){#fig:light_casting_shadow}
 
