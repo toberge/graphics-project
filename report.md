@@ -29,16 +29,16 @@ The project was written in Rust with the `glow-rs` wrapper for OpenGL. The scene
 
 ## Animated Camera
 
-The camera was intended to revolve around the center of the scene, showing the content of the screens and reflections on the screens at the edges. This was achieved using a look-at matrix with vectors defined like so:
+The camera was intended to revolve around the center of the scene, showing the content of the screens and reflections appearing on the screens as the viewing angles turned steep. This was achieved using a look-at matrix with vectors defined like so:
 $$
 \begin{aligned}
-  v_{\text{ground}} &= [\cos r, 0, \sin r],\quad
-  v_{\text{eye}} = [\cos r, h, \sin r]\\
+  v_{\text{ground}} &= [r \cdot \cos \theta, 0, r \cdot \sin \theta],\quad
+  v_{\text{eye}} = [r \cdot \cos \theta, h, r \cdot \sin \theta]\\
   v_{\text{center}} &= \text{lowermost point of the crt structure}\\
   v_{\text{up}} &= (v_{\text{center}} - v_{\text{eye}}) \times ((v_{\text{center}} - v_{\text{eye}}) \times (v_{\text{ground}} - v_{\text{eye}}))
 ,\end{aligned}
 $$
-where $r$ is the radius and $h$ is the height of the orbit.
+where $r$ is the radius and $h$ is the height of the orbit, and $\theta$ is the current angle of rotation.
 
 For inspecting visuals on the screens more closely, button presses were tied to animations that zoomed in and made the camera stay in front of a chosen screen. The transition was achieved using linear and spherical interpolation (GLM's `mix` and `slerp` functions) of position and orientation vectors respectively, inspired by a StackOverflow answer [@stackoverflow_interpolation].
 The animations flowed smoothly, but it was possible to clip through the heap of CRTs during the transition.
@@ -52,7 +52,7 @@ $$
 
 <!-- ### Planar Approach -->
 
-The first approach was to render the scene from the perspective of the reflective object to _one_ two-dimensional texture. When rendering, the texture coordinates of the objects were combined with the reflection vector to approximate the look of a refleciton, using the following homemade mapping:
+The first approach was to render the scene from the perspective of the reflective object to _one_ two-dimensional texture. When rendering, the texture coordinates of the objects were combined with the reflection vector to approximate the look of a reflection, using the following homemade mapping that basically shifts the texture coordinates by a factor of a transformed reflection vector:
 $$
 \begin{aligned}
   r_{uv} = ( 0.25\cdot (t_{uv} - 0.5) + 0.75\cdot 0.5\cdot  (TBN^{-1} \cdot  r_{x,y} ) )\cdot 0.5 + 0.5
@@ -62,11 +62,11 @@ where $t_{uv}$ is the texture coordinates, $TBN$ is a matrix that transforms fro
 
 <!-- ### Cubemaps -->
 
-The second approach was to use cubemaps --- collections of six textures representing the faces of a cube. In the case of reflections, the textures are based on what can be seen of the surrounding area from a reflective object. This was implemented using look-at matrices with up and center vectors tailored to each of the six faces. See +@fig:cubemap.
+The second approach was to use cubemaps --- collections of six textures representing the faces of a cube. In the case of reflections, the textures are based on what can be seen of the surrounding area from a reflective object. This was implemented using look-at matrices with up and center vectors tailored to each of the six faces. See +@fig:cubemap. (_entering personal mode_) I struggled with rotating and indexing the cubemaps properly and ended up with an inadequate implementation. My attempts at rotating the viewpoint that the cubemaps were rendered from did not garner much success, and rotating the reflection vectors used to index the cubemaps did not give meaningful results either. It did not help that I was fundamentally unsure of how the reflections of this particular scene would look in the real world.
 
 Implementing both approches was more troublesome than expected. Creating the transformation matrices for the perspectives of the reflective objects turned out to be a minefield of near-solutions that flipped some part of the scene around and sometimes required reversing the winding order to have the result make any sense at all. The transformation for the planar reflections was reworked to use the total rotation along each axis instead of extracting rotation from the model matrices. This turned out to be easier to deal with.
 In the final stretch of the project, the reflections were tested in a more complex environment (compare to +@fig:test_scene and @fig:test_scene_closeup) and several issues were discovered and fixed --- the most egregious was the lack of depth testing because depth buffers had not been bound in the creation of the off-screen framebuffers, see +@fig:depth_issues. Another issue was that the reflections were rendered upside down, which was not clear from the test scene.
-In the final result, the reflections based on cubemaps did not handle rotations between the four cardinal directions well. Additionally, since the reflections needed a moderately large canvas for details to carry over properly, and adding interesting animations to the surrounding environment was not prioritized, they were rendered once at the start instead of for each frame.
+In the final result, the reflections based on cubemaps did not handle rotations between the four cardinal directions well. Additionally, since the reflections needed a moderately large canvas for details to carry over properly, and adding interesting animations to the surrounding environment was not prioritized, they were rendered once at the start instead of for each frame. Lastly, the reflections were not intended to contribute _that_ much to the scene, given how they only become visible at steep angles and do not obscure the visuals on the screens when viewed from the front.
 
 
 ## Visualizations
@@ -81,7 +81,7 @@ This technique can be modified to achieve various effects.
 
 <!-- ### Signed Distance Functions -->
 
-To find the closest distance to anything in the scene, ray marching uses signed distance functions, hereafter called SDFs. SDFs give exact or estimated distances to a surface, as well as the distance to a surface from _inside_ the surface, with the latter represented as negative values. As an example, consider the SDF
+To find the closest distance to anything in the scene, ray marching may use signed distance functions, hereafter called SDFs. SDFs give exact or estimated distances to a surface, as well as the distance to a surface from _inside_ the surface, with the latter represented as negative values. As an example, consider the SDF
 $d = |p - c| - r,$
 where $d$ is the distance from $p$ to the sphere with center $c$ and radius $r$. Here, any point inside the sphere will have $d < 0$ since $|p - c| < r$, and any point outside the sphere's surface will have $d > 0$ since $|p - c| > r$.
 
@@ -98,7 +98,7 @@ On the less accurate side of SDFs, it is possible to use functions from 2D coord
 
 <!-- ### Bloom -->
 
-Glow was added to some of the shaders by finding the number of steps taken to reach the back of the scene and mixing in a color based on a multiple of this step count [@hvidtfeldts_lighting; @cp_raymarching]. This created a ringing effect outside the intense glow that I personally liked the look of. However, adding this effect to a scene with a periodic and somewhat inaccurate SDF showed a weakness of this technique, where the glow would be strong in parts of the scene that are empty, see +@fig:screens_zoomed.
+Glow was added to some of the shaders by finding the number of steps taken to reach the back of the scene and mixing in a color based on a multiple of this step count [@hvidtfeldts_lighting; @cp_raymarching]. This created a ringing effect outside the intense glow that I personally liked the look of. However, adding this effect to a scene with a periodic and somewhat inaccurate SDF showed a weakness of this technique, where the glow would be strong in parts of the scene that were empty, see +@fig:screens_zoomed.
 
 <!-- pic of gyroid shader maybe -->
 
