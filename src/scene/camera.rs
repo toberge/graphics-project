@@ -162,7 +162,7 @@ impl Camera for RevolvingCamera {
         self.perspective * transformation
     }
 
-    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta_time: f32) {
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, _delta_time: f32) {
         match keycode {
             VirtualKeyCode::Space => {
                 self.direction = -self.direction;
@@ -218,7 +218,7 @@ impl Camera for RevolvingCamera {
             _ => {}
         };
     }
-    fn handle_mouse(&mut self, delta_xy: (f32, f32)) {}
+    fn handle_mouse(&mut self, _delta_xy: (f32, f32)) {}
 }
 
 impl FirstPersonCamera {
@@ -248,12 +248,12 @@ impl FirstPersonCamera {
 }
 
 impl Camera for FirstPersonCamera {
-    fn get_position(&self, time: f32) -> glm::Vec3 {
+    fn get_position(&self, _time: f32) -> glm::Vec3 {
         glm::vec3(self.x, self.y, self.z)
     }
 
     /// Assemble the global transformation matrix
-    fn create_transformation(&mut self, time: f32, delta_time: f32) -> glm::Mat4 {
+    fn create_transformation(&mut self, _time: f32, _delta_time: f32) -> glm::Mat4 {
         // Rotate along x according to pitch
         let pitch_rotation: glm::Mat4 = glm::rotation(self.pitch, &glm::vec3(1.0, 0.0, 0.0));
         // Rotate along y according to yaw
@@ -270,7 +270,7 @@ impl Camera for FirstPersonCamera {
                 * glm::identity()
     }
 
-    fn handle_keys(&mut self, keycode: &VirtualKeyCode, time: f32, delta: f32) {
+    fn handle_keys(&mut self, keycode: &VirtualKeyCode, _time: f32, delta: f32) {
         let rot = self.just_rotation();
         match keycode {
             VirtualKeyCode::A => {
@@ -305,19 +305,6 @@ impl Camera for FirstPersonCamera {
                 self.y += rot[6] * delta;
                 self.z += rot[10] * delta;
             }
-            //VirtualKeyCode::Left => {
-            //    cam.yaw -= delta_time;
-            //}
-            //VirtualKeyCode::Right => {
-            //    cam.yaw += delta_time;
-            //}
-            //VirtualKeyCode::Up => {
-            //    // TODO the angle might be the opposite here, actually
-            //    cam.pitch -= delta_time;
-            //}
-            //VirtualKeyCode::Down => {
-            //    cam.pitch += delta_time;
-            //}
             _ => {}
         }
     }

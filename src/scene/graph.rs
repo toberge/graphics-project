@@ -447,17 +447,4 @@ impl SceneGraph {
             self.render(gl, child, view_transform, camera_position, with_reflection);
         }
     }
-
-    pub unsafe fn teardown(&mut self, gl: &glow::Context) {
-        // Clean up VAOs
-        self.vaos.iter().for_each(|vao| vao.destroy(gl));
-        // Clean up shaders
-        self.final_shader
-            .map_or_else(|| return, |shader| gl.delete_program(shader));
-        self.reflection_shader
-            .map_or_else(|| return, |shader| gl.delete_program(shader));
-        self.screen_shaders
-            .iter()
-            .for_each(|&(shader, _)| gl.delete_program(shader));
-    }
 }

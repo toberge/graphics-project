@@ -5,12 +5,6 @@ use tobj;
 /// Holds all information necessary to draw an initialized VAO.
 pub struct VAO {
     pub vao: NativeVertexArray,
-    vertex_buffer: NativeBuffer,
-    normal_buffer: NativeBuffer,
-    tangent_buffer: NativeBuffer,
-    bitangent_buffer: NativeBuffer,
-    uv_buffer: NativeBuffer,
-    color_buffer: NativeBuffer,
     pub size: i32,
     pub shininess: f32,
 }
@@ -102,10 +96,10 @@ impl VAO {
         gl.bind_vertex_array(Some(vao));
 
         // Generate and bind vertices and normals
-        let vertex_buffer = create_buffer(&gl, 0, 3, vertices);
-        let normal_buffer = create_buffer(&gl, 1, 3, normals);
-        let uv_buffer = create_buffer(&gl, 2, 2, uvs);
-        let color_buffer = create_buffer(&gl, 3, 4, color);
+        create_buffer(&gl, 0, 3, vertices);
+        create_buffer(&gl, 1, 3, normals);
+        create_buffer(&gl, 2, 2, uvs);
+        create_buffer(&gl, 3, 4, color);
 
         // Compute tangent and bitangent vectors
         let mut tangents: Vec<glm::Vec3> = vec![];
@@ -154,13 +148,13 @@ impl VAO {
             bitangents.push(bitangent);
         }
         // Assign them as attributes
-        let tangent_buffer = create_buffer(
+        create_buffer(
             &gl,
             4,
             3,
             &tangents.iter().flat_map(|&t| [t.x, t.y, t.z]).collect(),
         );
-        let bitangent_buffer = create_buffer(
+        create_buffer(
             &gl,
             5,
             3,
@@ -178,12 +172,6 @@ impl VAO {
         VAO {
             vao,
             size: indices.len() as i32,
-            vertex_buffer,
-            normal_buffer,
-            tangent_buffer,
-            bitangent_buffer,
-            uv_buffer,
-            color_buffer,
             shininess,
         }
     }
@@ -223,15 +211,5 @@ impl VAO {
             &vec![0, 1, 2, 0, 2, 3],
             32.,
         )
-    }
-
-    pub unsafe fn destroy(&self, gl: &glow::Context) {
-        gl.delete_vertex_array(self.vao);
-        gl.delete_buffer(self.vertex_buffer);
-        gl.delete_buffer(self.normal_buffer);
-        gl.delete_buffer(self.tangent_buffer);
-        gl.delete_buffer(self.bitangent_buffer);
-        gl.delete_buffer(self.uv_buffer);
-        gl.delete_buffer(self.color_buffer);
     }
 }

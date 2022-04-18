@@ -29,14 +29,6 @@ unsafe fn read_and_compile_shader(
 }
 
 impl Shader {
-    pub unsafe fn get_uniform_location(
-        &self,
-        gl: &glow::Context,
-        location: &str,
-    ) -> Option<NativeUniformLocation> {
-        gl.get_uniform_location(self.program, location)
-    }
-
     pub unsafe fn activate(&self, gl: &glow::Context) {
         gl.use_program(Some(self.program));
     }
@@ -66,9 +58,5 @@ impl Shader {
         gl.delete_shader(vertex_shader);
         gl.delete_shader(fragment_shader);
         Shader { program }
-    }
-
-    pub unsafe fn destroy(&self, gl: &glow::Context) {
-        gl.delete_program(self.program);
     }
 }

@@ -23,6 +23,8 @@ Install [Rust](https://www.rust-lang.org/tools/install) and run the program with
 
 ## Freely movable camera
 
+Change `FREE_LOOK` to `true` on line 21 in [main.rs](src/main.rs) to activate this camera mode.
+
 + **WASD** to move horizontally and **QE** to move vertically
 + Mouse to look around
 
