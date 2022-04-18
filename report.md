@@ -94,7 +94,7 @@ Some of the shaders in this project use Inigo Iquelez' smooth combination operat
 
 <!-- something about that landscape video -->
 
-On the less accurate side of SDFs, it is possible to use functions from 2D coordinates to scalars as 3D SDFs by letting the distance from a point to the $y$ value given by the function be the distance estimate to the whole landscape. Two of the shaders use this approach, with terrain generation from a tutorial on generating landscapes in this way [@iq_landscape], see +@fig:landscapewave. This sort of SDF has blatant inaccuracies that can be alleviated by stepping _less than_ the estimated distance to the scene along the ray while marching, which might lead to reduced performance.
+On the less accurate side of SDFs, it is possible to use functions from 2D coordinates to scalars as 3D SDFs by letting the distance from a point to the $y$ value given by the function be the distance estimate to the whole landscape. Two of the shaders use this approach, with terrain generation from a tutorial on generating landscapes in this way [@iq_landscape], see +@fig:landscapewave. This sort of SDF has blatant inaccuracies that can be alleviated by stepping _less than_ the estimated distance to the scene along the ray while marching (compare +@fig:landscape to @fig:landscape_wrong), which might lead to reduced performance.
 
 ### Effects
 
@@ -143,6 +143,10 @@ Compared to the reflections, displaying the output of different fragment shaders
 ![Intersecting a plane and a large capsule, then carving out a face with a difference operation](img/sculpting.png){#fig:sculpting}
 
 ![Sine waves added to a sphere SDF](img/ripples.png){#fig:ripples}
+
+![Value noise-based landscape](img/landscape.png){#fig:landscape}
+
+![The same landscape with severe overstepping](img/landscape_wrong.png){#fig:landscape_wrong}
 
 ![Landscape in retro- or whatever-it-is-wave style](img/retrowave_landscape.png){#fig:landscapewave}
 
