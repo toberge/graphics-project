@@ -289,12 +289,12 @@ impl CubemapTexture {
                 0,
             );
 
-            if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-                panic!(
-                    "Framebuffer creation failed! {}",
-                    gl.check_framebuffer_status(glow::FRAMEBUFFER)
-                );
-            }
+            //if gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+            //    panic!(
+            //        "Framebuffer creation failed! {}",
+            //        gl.check_framebuffer_status(glow::FRAMEBUFFER)
+            //    );
+            //}
         }
 
         gl.bind_framebuffer(glow::FRAMEBUFFER, None);

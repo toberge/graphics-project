@@ -274,7 +274,6 @@ impl SceneGraph {
                     gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
                     self.render_in_terms_of_with_lookat(&gl, node_index, &center, &up);
                 }
-                gl.bind_framebuffer(glow::FRAMEBUFFER, None);
             }
         }
     }
@@ -289,7 +288,7 @@ impl SceneGraph {
     ) {
         let node = &self.nodes[node_index];
 
-        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 1.0, 100.0);
+        let perspective: glm::Mat4 = glm::perspective(1., PI / 2., 2.0, 100.0);
         let camera_position: glm::Vec3 =
             glm::vec4_to_vec3(&(node.model_matrix * glm::vec4(0., 0., 0., 1.)));
         let camera_transform = perspective

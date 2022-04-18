@@ -96,7 +96,9 @@ void main() {
             // (ignoring depth since distance to point should contribute to the reflection anyway)
             vec2 reflection_uv = mix(uv.xy - .5, r.xy*.5, .75);
             reflection_uv = reflection_uv*.5 + .5;
-            // TODO need to flip u direction on some diagonal monitors
+            // Need to flip u direction on one particular monitor
+            if (abs(max(0., dot(normalize(normal.xz), vec2(0, -1))) - 1.) < .0001)
+                reflection_uv.x = 1.-reflection_uv.x;
             reflection = texture(reflection_sampler, reflection_uv).rgb;
         }
     }
