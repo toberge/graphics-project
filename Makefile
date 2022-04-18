@@ -1,4 +1,4 @@
 all: report.pdf
 
 report.pdf: report.md sources.bib
-	pandoc report.md --template eisvogel --listings --citeproc -o report.pdf
+	pandoc report.md --template eisvogel --filter pandoc-fignos --listings --citeproc -o report.pdf
