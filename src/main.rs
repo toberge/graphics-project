@@ -26,32 +26,36 @@ const MOVE_SPEED: f32 = 20.0;
 const MOUSE_LOOK: bool = true;
 const FREE_LOOK: bool = false;
 
+#[derive(PartialEq, Copy, Clone)]
+enum Mode {
+    Standard,
+    Reflections,
+    Normals,
+    ReflectionVectors,
+}
+
 struct State {
-    just_reflections: bool,
-    just_reflection_vectors: bool,
-    just_normals: bool,
+    mode: Mode,
     use_cubemaps: bool,
 }
 
 impl State {
     fn new() -> State {
         State {
-            just_reflections: false,
-            just_reflection_vectors: false,
-            just_normals: false,
+            mode: Mode::Standard,
             use_cubemaps: false,
         }
     }
 
     fn encode(&self) -> i32 {
-        if self.just_reflections {
-            1
-        } else if self.just_normals {
-            2
-        } else if self.just_reflection_vectors {
-            3
+        self.mode as i32
+    }
+
+    fn toggle(&mut self, mode: Mode) {
+        if self.mode == mode {
+            self.mode = Mode::Standard;
         } else {
-            0
+            self.mode = mode;
         }
     }
 }
@@ -202,13 +206,13 @@ fn main() {
                 for key in keys.iter() {
                     match key {
                         VirtualKeyCode::R => {
-                            state.just_reflections = !state.just_reflections;
+                            state.toggle(Mode::Reflections);
                         }
                         VirtualKeyCode::N => {
-                            state.just_normals = !state.just_normals;
+                            state.toggle(Mode::Normals);
                         }
                         VirtualKeyCode::M => {
-                            state.just_reflection_vectors = !state.just_reflection_vectors;
+                            state.toggle(Mode::ReflectionVectors);
                         }
                         VirtualKeyCode::C => {
                             state.use_cubemaps = !state.use_cubemaps;
