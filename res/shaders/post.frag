@@ -9,8 +9,6 @@ uniform vec3 camera_position;
 uniform int mode;
 
 #define STANDARD_MODE 0
-#define REFLECTION_MODE 1
-#define NORMALS_MODE 2
 
 uniform layout(binding = 0) sampler2D color_sampler;
 uniform layout(binding = 1) sampler2D depth_sampler;
@@ -18,24 +16,6 @@ uniform layout(binding = 2) sampler2D crt_sampler;
 uniform layout(binding = 3) sampler2D crt_depth_sampler;
 
 out vec4 color;
-
-// TODO actual noise or sth
-float fog(vec3 p) {
-    return abs((.5 + abs(p.x) + abs(p.y)) - p.z)/40.;
-}
-
-float raymarch_fog(float depth) {
-    float step = .1;
-    float intensity = 0.;
-    vec3 p = vec3(position.xy, 0.);
-    float d = 0.;
-    while (d < depth) {
-        intensity += fog(p);
-        d += step;
-        p.z = d;
-    }
-    return intensity;
-}
 
 void main() {
     vec3 pre_color = texture(color_sampler, uv).rgb;
@@ -46,9 +26,5 @@ void main() {
     if (crt_depth <= depth && mode == STANDARD_MODE) {
         pre_color = pre_color + 0.5 * crt;
     }
-    // Extra effects
-    vec3 fog_color = vec3(.7);
-    float intensity = raymarch_fog(depth);
-    intensity = 0.; // temporary make it disappear TODO undo when you want to
-    color = vec4(mix(pre_color, fog_color, intensity), 1.);
+    color = vec4(pre_color, 1.);
 }
