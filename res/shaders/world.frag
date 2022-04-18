@@ -1,9 +1,9 @@
 #version 430
 precision mediump float;
 
-#define FRESNEL_BIAS 0.02
-#define FRESNEL_POWER 2.
-#define FRESNEL_SCALE 0.50
+#define FRESNEL_BIAS 0.05
+#define FRESNEL_POWER 1.7
+#define FRESNEL_SCALE 0.60
 
 #define EMMISSIVE_FACTOR 0.3
 
