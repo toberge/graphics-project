@@ -23,15 +23,14 @@ Install [Rust](https://www.rust-lang.org/tools/install) and run the program with
 
 ## Freely movable camera
 
-Change `FREE_LOOK` to `true` on line 21 in [main.rs](src/main.rs) to activate this camera mode.
-
 + **WASD** to move horizontally and **QE** to move vertically
 + Mouse to look around
 
 ## Other keybinds
 
++ **F** to switch between camera modes
 + **R** to show reflections without Fresnel effect or shaders obscuring them
-+ **C** to switch between cubemap-based or planar reflections
++ **C** to switch between cubemap-based and planar reflections
 + **N** to show normals
 + **M** to show reflection vectors
 

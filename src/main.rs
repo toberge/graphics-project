@@ -23,8 +23,7 @@ const WINDOW_WIDTH: u32 = 1280;
 const WINDOW_HEIGHT: u32 = 720;
 const LOOK_SPEED: f32 = 0.005;
 const MOVE_SPEED: f32 = 20.0;
-const MOUSE_LOOK: bool = true;
-const FREE_LOOK: bool = false;
+const CAPTURE_MOUSE: bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
 enum Mode {
@@ -37,13 +36,15 @@ enum Mode {
 struct State {
     mode: Mode,
     use_cubemaps: bool,
+    free_look: bool,
 }
 
 impl State {
     fn new() -> State {
         State {
             mode: Mode::Standard,
-            use_cubemaps: false,
+            use_cubemaps: true,
+            free_look: false,
         }
     }
 
@@ -96,7 +97,7 @@ fn main() {
     //.with_multisampling(4);
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
     // Use mouse controls with invisible mouse confined to the screen.
-    if MOUSE_LOOK && FREE_LOOK {
+    if CAPTURE_MOUSE {
         windowed_context
             .window()
             .set_cursor_grab(true)
@@ -217,9 +218,12 @@ fn main() {
                         VirtualKeyCode::C => {
                             state.use_cubemaps = !state.use_cubemaps;
                         }
+                        VirtualKeyCode::F => {
+                            state.free_look = !state.free_look;
+                        }
                         _ => {
                             // This camera handles preses only
-                            if !FREE_LOOK {
+                            if !state.free_look {
                                 rotcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                             }
                         }
@@ -231,16 +235,16 @@ fn main() {
             // Continuously pressed keys trigger camera movements
             if let Ok(keys) = pressed_keys.lock() {
                 for key in keys.iter() {
-                    if FREE_LOOK {
+                    if state.free_look {
                         fpcam.handle_keys(key, time, delta_time * MOVE_SPEED);
                     }
                 }
             }
 
             // Handle mouse movement. delta contains the x and y movement of the mouse since last frame in pixels
-            if MOUSE_LOOK {
+            if state.free_look {
                 if let Ok(mut delta) = mouse_delta.lock() {
-                    if FREE_LOOK {
+                    if state.free_look {
                         fpcam.handle_mouse((delta.0 * LOOK_SPEED, delta.1 * LOOK_SPEED));
                     } else {
                         rotcam.handle_mouse((delta.0 * LOOK_SPEED, delta.1 * LOOK_SPEED));
@@ -252,12 +256,12 @@ fn main() {
             unsafe {
                 // Update transformations
                 scene_graph.update(&gl);
-                let view_transform = if FREE_LOOK {
+                let view_transform = if state.free_look {
                     fpcam.create_transformation(time, delta_time)
                 } else {
                     rotcam.create_transformation(time, delta_time)
                 };
-                let camera_position = if FREE_LOOK {
+                let camera_position = if state.free_look {
                     fpcam.get_position(time)
                 } else {
                     rotcam.get_position(time)
